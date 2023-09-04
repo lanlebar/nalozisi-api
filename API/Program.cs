@@ -29,11 +29,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("AppSettings:Token").Value!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("AppSettings:Key").Value!)),
             ValidateIssuer = false,
             ValidateAudience = false
         };
     });
+// Authorization
+builder.Services.AddAuthorization();
 
 // Database connection
 builder.Services.AddDbContext<DataContext>(options =>
@@ -64,8 +66,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("NgOrigins");
 app.UseHttpsRedirection();
+
+// auth
 app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthorization();
 
 app.MapControllers();
 app.Run();

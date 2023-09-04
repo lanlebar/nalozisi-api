@@ -31,8 +31,8 @@ namespace API.Services.AuthService
                 throw new ArgumentException("Uporabnik s tem uporabniškim imenom ne obstaja!");
             }
 
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Username == userLoginDto.Username);
-
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Username == userLoginDto.Username) ?? throw new ArgumentException("Uporabnik s tem uporabniškim imenom ne obstaja!");
+            
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
@@ -46,7 +46,7 @@ namespace API.Services.AuthService
 
             JwtSecurityToken token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddMonths(1),
+                expires: DateTime.Now.AddDays(14),
                 signingCredentials: creds
             );
 

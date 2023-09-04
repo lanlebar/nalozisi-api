@@ -17,7 +17,7 @@ namespace API.Controllers.Auth
             _authService = authService;
         }
 
-        [HttpPost("register")]
+        [HttpPost("register"), AllowAnonymous]
         public async Task<ActionResult<string>> Register([FromBody] UserRegisterDto userRegisterDto)
         {
             try
@@ -60,6 +60,31 @@ namespace API.Controllers.Auth
             }
         }
 
+        [HttpPost("logout")]
+        public async Task<ActionResult<User>> Logout([FromBody] AuthTokenDto token)
+        {
+            try
+            {
+                var user = await _authService.Logout(token);
+                return Ok(user);
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(new ErrorRespone { ErrorCode = 1, Message = e.Message });
+            }
+            catch (Exception e)
+            {
+                // Wild card error
+                return StatusCode(500, new ErrorRespone { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpGet("verify"), Authorize]
+        public ActionResult Verify()
+        {
+            // If we get here, the token is valid
+            return Ok();
+        }
 
     }
 }
