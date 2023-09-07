@@ -27,11 +27,12 @@ namespace API.Controllers.Auth
             }
             catch (ArgumentException e)
             {
+                // Missing fields
                 return BadRequest(new ErrorRespone { ErrorCode = 1, Message = e.Message });
             }
             catch (ConflictException e)
             {
-                // Wild card error
+                // User not found
                 return Conflict(new ErrorRespone { ErrorCode = 2, Message = e.Message });
             }
             catch (Exception e)
@@ -51,26 +52,8 @@ namespace API.Controllers.Auth
             }
             catch (ArgumentException e)
             {
-                return BadRequest(new ErrorRespone { ErrorCode = 1, Message = e.Message });
-            }
-            catch (Exception e)
-            {
-                // Wild card error
-                return StatusCode(500, new ErrorRespone { ErrorCode = 2, Message = e.Message });
-            }
-        }
+                return StatusCode(401, new ErrorRespone { ErrorCode = 1, Message = e.Message });
 
-        [HttpPost("logout")]
-        public async Task<ActionResult<User>> Logout([FromBody] AuthTokenDto token)
-        {
-            try
-            {
-                var user = await _authService.Logout(token);
-                return Ok(user);
-            }
-            catch (ArgumentException e)
-            {
-                return BadRequest(new ErrorRespone { ErrorCode = 1, Message = e.Message });
             }
             catch (Exception e)
             {
