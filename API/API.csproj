@@ -32,7 +32,6 @@
     <Folder Include="Middleware\NewFolder\" />
     <Folder Include="Services\TokenService\" />
     <Folder Include="Services\PeerService\" />
-    <Folder Include="Services\TorrentService\" />
   </ItemGroup>
 
 </Project>

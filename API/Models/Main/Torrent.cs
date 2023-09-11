@@ -5,8 +5,9 @@ public class Torrent
     [Key]
     public required int TorrentId { get; set; }
     public  required string Title { get; set; }
-    public string? DescriptionFileGuid { get; set; }
-    public string? ImageFileGuid { get; set; }
+    public string? DescriptionFilePath { get; set; }
+    public string? ImageFilePath { get; set; }
+    public string? TorrentFilePath { get; set; }
     public required double SizeBytes { get; set; }
     public required DateTime UploadedDate { get; set; }
     public required string MagnetLink { get; set; }

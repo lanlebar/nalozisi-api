@@ -2201,11 +2201,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Projects\\114-api\\API\\API.csproj",
+      "projectUniqueName": "C:\\Projects\\140-api\\API\\API.csproj",
       "projectName": "API",
-      "projectPath": "C:\\Projects\\114-api\\API\\API.csproj",
+      "projectPath": "C:\\Projects\\140-api\\API\\API.csproj",
       "packagesPath": "C:\\Users\\lanle\\.nuget\\packages\\",
-      "outputPath": "C:\\Projects\\114-api\\API\\obj\\",
+      "outputPath": "C:\\Projects\\140-api\\API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\lanle\\AppData\\Roaming\\NuGet\\NuGet.Config",

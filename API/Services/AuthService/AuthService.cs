@@ -82,6 +82,7 @@ namespace API.Services.AuthService
                 Email = request.Email,
                 PasswordHash = hashedPassword,
                 PasswordSalt = salt,
+                ProfilePicFilePath = null,
                 JoinedDate = DateTime.UtcNow,
                 RoleId = 3
             };
