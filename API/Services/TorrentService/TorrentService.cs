@@ -12,7 +12,25 @@ namespace API.Services.TorrentService
         }
 
         // Methods
-        public async Task<List<Torrent>> CreateTorrentAsync(AddTorrentDto addTorrentDto)
+        public async Task<Torrent> UploadTorrentAsync(UploadTorrentDto request)
+        {
+            return null;
+            try
+            {
+                //var torrent = new Torrent
+                //{
+                //    Title = request.Title,
+                //};
+                //await _context.Torrent.AddAsync(torrent);
+                //await _context.SaveChangesAsync();
+                //return await _context.Torrent.ToListAsync();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+        public async Task<Torrent> CreateTorrentAsync(UploadTorrentDto addTorrentDto)
         {
             return null;
             try
@@ -31,7 +49,7 @@ namespace API.Services.TorrentService
             }
         }
 
-        public async Task<List<Torrent>> GetTorrentByIdAsync(int torrentId)
+        public async Task<Torrent> GetTorrentByIdAsync(int torrentId)
         {
             return null;
         }

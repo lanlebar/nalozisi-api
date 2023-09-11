@@ -124,11 +124,6 @@ namespace API.Services.AuthService
             return await GenerateJwtToken(request);
         }
 
-        public async Task<User> Logout(AuthTokenDto token)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<List<BannedEmail>> GetBannedEmails()
         {
             throw new NotImplementedException();

@@ -1,6 +1,6 @@
-﻿namespace API.Formats.Return
+﻿namespace API.DTOs.Error
 {
-    public class ErrorRespone
+    public class ErrorResponseDto
     {
         public required int ErrorCode { get; set; }
         public required string Message { get; set; }

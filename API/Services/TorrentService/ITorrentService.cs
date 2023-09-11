@@ -5,11 +5,14 @@ namespace API.Services.TorrentService
     public interface ITorrentService
     {
         // Create torrent
-        Task<List<Torrent>> CreateTorrentAsync(AddTorrentDto request);
+        // By torrent file upload
+        Task<Torrent> UploadTorrentAsync(UploadTorrentDto request);
+        // Creating the actual torrent file - TODO
+        Task<Torrent> CreateTorrentAsync(UploadTorrentDto request);
 
         // Get torrent
         // By torrent id
-        Task<List<Torrent>> GetTorrentByIdAsync(int torrentId);
+        Task<Torrent> GetTorrentByIdAsync(int torrentId);
         // By search query
         Task<List<Torrent>> GetTorrentByQueryAsync(string searchQuery);
         // By torrent category

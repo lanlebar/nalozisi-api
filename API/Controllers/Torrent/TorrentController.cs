@@ -1,6 +1,8 @@
-﻿using API.DTOs.User;
+﻿using API.DTOs.Error;
+using API.DTOs.Torrent;
+using API.DTOs.User;
 using API.Services.AuthService;
-using Microsoft.AspNetCore.Authorization;
+using API.Services.TorrentService;
 
 namespace API.Controllers.Torrent
 {
@@ -10,35 +12,62 @@ namespace API.Controllers.Torrent
     {
         // Fields
         private readonly IAuthService _authService;
+        private readonly ITorrentService _torrentService;
 
         // Constructor
-        public TorrentController(IAuthService authService)
+        public TorrentController(IAuthService authService, ITorrentService torrentService)
         {
             _authService = authService;
+            _torrentService = torrentService;
         }
 
-        [HttpPost("create"), AllowAnonymous]
-        public async Task<ActionResult<string>> Register([FromBody] UserRegisterDto userRegisterDto)
+        [HttpPost("upload")]
+        public async Task<ActionResult<string>> UploadTorrent([FromBody] UploadTorrentDto uploadTorrentDto)
         {
             try
             {
-                string token = await _authService.RegisterAsync(userRegisterDto);
-                return StatusCode(201, new JwtTokenResponse { Token = token });
+
+                return Ok();
             }
             catch (ArgumentException e)
             {
                 // Missing fields
-                return BadRequest(new ErrorRespone { ErrorCode = 1, Message = e.Message });
+                return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = e.Message });
             }
             catch (ConflictException e)
             {
                 // User not found
-                return Conflict(new ErrorRespone { ErrorCode = 2, Message = e.Message });
+                return Conflict(new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
             catch (Exception e)
             {
                 // Wild card error
-                return StatusCode(500, new ErrorRespone { ErrorCode = 2, Message = e.Message });
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpPost("create")]
+        public async Task<ActionResult<string>> CreateTorrent([FromBody] UserLoginDto userLoginDto)
+        {
+            try
+            {
+                string token = await _authService.LoginAsync(userLoginDto);
+                return Ok(new JwtTokenResponseDto { Token = token });
+            }
+            catch (ArgumentException e)
+            {
+                // Missing fields
+                return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = e.Message });
+            }
+            catch (ConflictException e)
+            {
+                // User not found
+                return Conflict(new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+            catch (Exception e)
+            {
+                // Wild card error
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
         }
     }

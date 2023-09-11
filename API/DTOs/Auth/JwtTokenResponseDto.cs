@@ -1,6 +1,6 @@
-﻿namespace API.Formats.Return
+﻿namespace API.DTOs.Auth
 {
-    public class JwtTokenResponse
+    public class JwtTokenResponseDto
     {
         public required string Token { get; set; }
     }
