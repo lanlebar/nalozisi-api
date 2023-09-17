@@ -151,3 +151,6 @@ C:\Projects\140-api\API\obj\Debug\net7.0\refint\API.dll
 C:\Projects\140-api\API\obj\Debug\net7.0\API.pdb
 C:\Projects\140-api\API\obj\Debug\net7.0\API.genruntimeconfig.cache
 C:\Projects\140-api\API\obj\Debug\net7.0\ref\API.dll
+C:\Projects\140-api\API\bin\Debug\net7.0\Mono.Nat.dll
+C:\Projects\140-api\API\bin\Debug\net7.0\MonoTorrent.dll
+C:\Projects\140-api\API\bin\Debug\net7.0\ReusableTasks.dll

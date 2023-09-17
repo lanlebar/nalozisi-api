@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http.HttpResults;
+using API.DTOs.Error;
 
 namespace API.Services.AuthService
 {
@@ -35,9 +36,10 @@ namespace API.Services.AuthService
             
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username.ToString()),
-                new Claim(ClaimTypes.Email, user.Email.ToString())
+                new Claim("uid", user.UserId.ToString()),
+                new Claim("username", user.Username.ToString()),
+                new Claim("email", user.Email.ToString()),
+                new Claim("role", user.RoleId.ToString())
             };
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
@@ -46,7 +48,7 @@ namespace API.Services.AuthService
 
             JwtSecurityToken token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(14),
+                expires: DateTime.Now.AddYears(14),
                 signingCredentials: creds
             );
 
@@ -70,7 +72,7 @@ namespace API.Services.AuthService
             // Check if user exists
             if (await _userService.UserExists(request.Username, request.Email))
             {
-                throw new ConflictException("Uporabnik s tem uporabniškim imenom ali e-poštnim naslovom že obstaja!");
+                throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom ali e-poštnim naslovom že obstaja!");
             }
 
             // Role table: 1 = Admin, 2 = Uploader, 3 = User
@@ -87,7 +89,24 @@ namespace API.Services.AuthService
                 RoleId = 3
             };
 
+            // Add new user instance to the database
             _context.User.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            // Create and add new Ratio entry instance
+            var newRatio = new Ratio
+            {
+                UserId = newUser.UserId,
+                SeedingBytes = 0,
+                LeechingBytes = 0
+            };
+            _context.Ratio.Add(newRatio);
+            await _context.SaveChangesAsync();
+
+            // Assign new ratio instance to the new user instance
+            newUser.Ratio = newRatio;
+
+            // Save changes to the database
             await _context.SaveChangesAsync();
 
             return await GenerateJwtToken(new UserLoginDto { Username = request.Username, Password = request.Password});

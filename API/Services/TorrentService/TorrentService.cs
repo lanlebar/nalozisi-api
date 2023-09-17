@@ -1,4 +1,10 @@
-﻿using API.DTOs.Torrent;
+﻿using MonoTorrent;
+using API.DTOs.Torrent;
+using API.Services.UserService;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Diagnostics;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace API.Services.TorrentService
 {
@@ -6,82 +12,193 @@ namespace API.Services.TorrentService
     {
         // Fields
         private readonly DataContext _context;
-        public TorrentService(DataContext context)
+        private readonly IUserService _userService;
+
+        public TorrentService(DataContext context, IUserService userService)
         {
             _context = context;
+            _userService = userService;
         }
 
         // Methods
-        public async Task<Torrent> UploadTorrentAsync(UploadTorrentDto request)
+        public async Task<string> GetScrapedTorrentsAsync(string searchQuery, string category, int limit)
         {
-            return null;
+            // Input validation
+            if (searchQuery == null || category == null || limit == 0)
+            {
+                throw new Exception("Search query, category and limit are required!");
+            }
+
+            // Get scraped torrents from Node.js project
+            string nodePath = @"C:\Program Files\nodejs\node.exe";
+            string scriptPath = @"C:\Projects\140-api\node_scripts\app.js";
+            string args = string.Format("{0} {1} {2} {3}", "app.js", searchQuery, category, limit);
+
+            // Start a new process for running Node.js
+            ProcessStartInfo startInfo = new ProcessStartInfo(nodePath, scriptPath + " " + args);
+            startInfo.RedirectStandardOutput = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+
+            // Create new process
+            Process process = new Process();
+            process.StartInfo = startInfo;
+
             try
             {
-                //var torrent = new Torrent
-                //{
-                //    Title = request.Title,
-                //};
-                //await _context.Torrent.AddAsync(torrent);
-                //await _context.SaveChangesAsync();
-                //return await _context.Torrent.ToListAsync();
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                await process.WaitForExitAsync();
+                return output;
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
+            finally
+            {
+                process.Close();
+            }
+
         }
-        public async Task<Torrent> CreateTorrentAsync(UploadTorrentDto addTorrentDto)
+
+        public async Task<Models.Main.Torrent> UploadTorrentAsync(UploadTorrentDto request)
         {
             return null;
+            // Input validation
+            if (request.Title == null || request.TorrentFile == null || request.TorrentCategory == null)
+            {
+                throw new ArgumentException("Naslov, torrent datoteka in kategorija so obvezni");
+            }
+
+            // Check if user exists
+            if (!await _userService.UserExists(request.UserId))
+            {
+                throw new ConflictExceptionDto("Uporabnik ne obstaja!");
+            }
+
+            // Check if file is .torrent
+            if (!request.TorrentFile.FileName.EndsWith(".torrent") || request.TorrentFile == null || request.TorrentFile.Length == 0)
+            {
+                throw new ArgumentException("Napaka pri nalaganju datoteke! Naloži velajvno .torrent datoteko");
+            }
+
+            // Check if user has right to upload
+            if (!await _userService.CanUpload(request.UserId))
+            {
+                throw new ConflictExceptionDto("Uporabnik nima pravic za nalaganje torrent datotek!");
+            }
+
+            // Check if torrent category exists
+            if (!await _context.TorrentCategory.AnyAsync(tc => tc.CategoryName == request.TorrentCategory))
+            {
+                throw new ConflictExceptionDto("Kategorija ne obstaja!");
+            }
+
+            // Check if all torrent tags exists (if there are any)
+            if (request.TorrentTags != null && request.TorrentTags.Any())
+            {
+                // Tags are present
+                foreach (var tag in request.TorrentTags)
+                {
+                    if (!await _context.TorrentTag.AnyAsync(tt => tt.TagValue == tag))
+                    {
+                        throw new ConflictExceptionDto("Torrent tag ne obstaja!");
+                    }
+                }
+            }
+
+            // Check if torrent already exists - Torrents can have the same title, but not by the same uploader
+
+            // Check if torrent with the same GUID already exists in file storage and database
+
+            // Read the torrent file
+            string magnetLink = "";
             try
             {
-                //var torrent = new Torrent
-                //{
-                //    Title = request.Title,
-                //};
-                //await _context.Torrent.AddAsync(torrent);
-                //await _context.SaveChangesAsync();
-                //return await _context.Torrent.ToListAsync();
+                using (var torrentStram = request.TorrentFile.OpenReadStream())
+                {
+                    MonoTorrent.Torrent torrent = MonoTorrent.Torrent.Load(torrentStram);
+
+                    // Get magnet link from torrent file
+                    string infoHash = torrent.InfoHash.ToString() ?? throw new Exception("Napaka pri branju torrent datoteke!"); ;
+                    magnetLink = string.Format("magnet:?xt=urn:btih:{0}", infoHash);
+                    
+
+                    
+                }
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
+
+
+            // Create torrent
+            Guid torrentGuid = Guid.NewGuid();
+            var newTorrent = new Models.Main.Torrent
+            {
+                TorrentGuid = torrentGuid,
+                Title = request.Title,
+                TorrentFilePath = string.Format("/torrent/{0}.torrent", torrentGuid.ToString()),
+                DescriptionFilePath = string.Format("/torrent/{0}.torrent", torrentGuid.ToString()),
+                ImageFilePath = string.Format("/img/{0}.torrent", torrentGuid.ToString()),
+                SizeBytes = request.TorrentFile.Length,
+                UploadedDate = DateTime.Now,
+                MagnetLink = magnetLink,
+                UserId = request.UserId,
+                TorrentCategoryId = await _context.TorrentCategory.FirstOrDefaultAsync(tc => tc.CategoryName == request.TorrentCategory).ContinueWith(tc => tc.Result.TorrentCategoryId),
+                DownloadAmount = 0,
+                LikeAmount = 0
+            };
+
+            // Add torrent to database
+            await _context.Torrent.AddAsync(newTorrent);
+
+            // Relate torrent to user
+
+
+        }
+        
+        public async Task<Models.Main.Torrent> CreateTorrentAsync(UploadTorrentDto addTorrentDto)
+        {
+            // TODO
+            throw new NotImplementedException();
         }
 
-        public async Task<Torrent> GetTorrentByIdAsync(int torrentId)
+        public async Task<Models.Main.Torrent> GetTorrentByIdAsync(int torrentId)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
-        public async Task<List<Torrent>> GetTorrentByQueryAsync(string searchQuery)
+        public async Task<List<Models.Main.Torrent>> GetTorrentByQueryAsync(string searchQuery)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
-        public async Task<List<Torrent>> GetTorrentByCategoryAsync(int torrentCategoryId)
+        public async Task<List<Models.Main.Torrent>> GetTorrentByCategoryAsync(int torrentCategoryId)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
-        public async Task<List<Torrent>> GetTorrentByTagAsync(int torrentTagId)
+        public async Task<List<Models.Main.Torrent>> GetTorrentByTagAsync(int torrentTagId)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
-        public async Task<List<Torrent>> GetAllTorrentsAsync()
+        public async Task<List<Models.Main.Torrent>> GetAllTorrentsAsync()
         {
-            return null;
+            throw new NotImplementedException();
         }
 
-        public async Task<List<Torrent>> UpdateTorrentAsync(UpdateTorrentDto request)
+        public async Task<List<Models.Main.Torrent>> UpdateTorrentAsync(UpdateTorrentDto request)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
-        public async Task<List<Torrent>> DeleteTorrentAsync(int torrentId)
+        public async Task<List<Models.Main.Torrent>> DeleteTorrentAsync(int torrentId)
         {
-            return null;
+            throw new NotImplementedException();
         }
     }
 }

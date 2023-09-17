@@ -8,7 +8,7 @@
         // User related
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<Ratio> Ratio { get; set; }
-        public virtual DbSet<Role> Role { get; set; }
+        public required virtual DbSet<Role> Role { get; set; }
         public virtual DbSet<Notification> Notification { get; set; }
         
         // Torrent related

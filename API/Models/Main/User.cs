@@ -17,14 +17,14 @@ public class User
     
     // 1-1
     public virtual Ratio Ratio { get; set; } = null!;
-    public virtual Role Role { get; set; } = null!;
     
     // 1-many
     public virtual List<Notification> Notifications { get; set; } = new();
     public virtual List<Torrent> UploadedTorrents { get; set; } = new();
+    public virtual Role Role { get; set; } = null!;
 
     // many-many
-    public virtual List<Like> LikedTorrents { get; set; } = new ();
-    public virtual List<Peer> Peers { get; set; } = new ();
+    public virtual List<Like> LikedTorrents { get; set; } = new();
+    public virtual List<Peer> Peers { get; set; } = new();
 
 }

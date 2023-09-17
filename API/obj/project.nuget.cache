@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "3TEdq2L6ayMPgalzW0dnJzlbY086rIOv4CxMflxlWkVJUsaE8uoApoKTbPYIH+bBsFcKSNkDd1CNDbAHjoTbFA==",
+  "dgSpecHash": "5muKoVQG/48x2KQ+IehcyIuMlrkoFxn9ZlLzmbzp+2E0Pb4Ii9XM767xYCA7cKviRywaLUo2X1VC24uczC3NvQ==",
   "success": true,
   "projectFilePath": "C:\\Projects\\140-api\\API\\API.csproj",
   "expectedPackageFiles": [
@@ -34,9 +34,12 @@
     "C:\\Users\\lanle\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\microsoft.netcore.targets\\1.1.0\\microsoft.netcore.targets.1.1.0.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\lanle\\.nuget\\packages\\mono.nat\\3.0.1\\mono.nat.3.0.1.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
+    "C:\\Users\\lanle\\.nuget\\packages\\monotorrent\\2.0.7\\monotorrent.2.0.7.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\npgsql\\7.0.4\\npgsql.7.0.4.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.4\\npgsql.entityframeworkcore.postgresql.7.0.4.nupkg.sha512",
+    "C:\\Users\\lanle\\.nuget\\packages\\reusabletasks\\2.0.0\\reusabletasks.2.0.0.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\swashbuckle.aspnetcore\\6.5.0\\swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.5.0\\swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.5.0\\swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",

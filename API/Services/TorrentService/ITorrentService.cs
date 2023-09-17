@@ -4,6 +4,9 @@ namespace API.Services.TorrentService
 {
     public interface ITorrentService
     {
+        // Get scraped torrents
+        Task<string> GetScrapedTorrentsAsync(string searchQuery, string category, int limit);
+
         // Create torrent
         // By torrent file upload
         Task<Torrent> UploadTorrentAsync(UploadTorrentDto request);

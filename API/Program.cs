@@ -3,8 +3,7 @@ global using API.Models;
 global using API.Models.Main;
 global using API.DTOs.Auth;
 global using API.Enums;
-global using API.Formats.Exceptions;
-global using API.Formats.Return;
+global using API.DTOs.Error;
 global using Microsoft.AspNetCore.Mvc;
 global using System.ComponentModel.DataAnnotations;
 
@@ -13,7 +12,7 @@ using System.Text;
 using API.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-
+using API.Services.TorrentService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +23,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer(options => 
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -34,6 +33,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
+
 // Authorization
 builder.Services.AddAuthorization();
 
@@ -44,6 +44,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 // Program services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITorrentService, TorrentService>();
 
 // CORS
 builder.Services.AddCors(options => options.AddPolicy(name: "NgOrigins",
@@ -51,8 +52,6 @@ builder.Services.AddCors(options => options.AddPolicy(name: "NgOrigins",
     {
         policy.WithOrigins("http://localhost:4200").AllowAnyMethod().AllowAnyHeader();
     }));
-
-
 
 var app = builder.Build();
 
@@ -67,7 +66,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("NgOrigins");
 app.UseHttpsRedirection();
 
-// auth
+// Auth
 app.UseAuthentication();
 app.UseAuthorization();
 
