@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Diagnostics;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Microsoft.Extensions.Configuration;
 
 namespace API.Services.TorrentService
 {
@@ -13,26 +14,41 @@ namespace API.Services.TorrentService
         // Fields
         private readonly DataContext _context;
         private readonly IUserService _userService;
+        private readonly IConfiguration _configuration;
 
-        public TorrentService(DataContext context, IUserService userService)
+        public TorrentService(DataContext context, IUserService userService, IConfiguration configuration)
         {
             _context = context;
             _userService = userService;
+            _configuration = configuration;
+            _configuration = configuration;
         }
 
         // Methods
-        public async Task<string> GetScrapedTorrentsAsync(string searchQuery, string category, int limit)
+        public async Task<string> GetScrapedTorrentsAsync(
+            [Required] string searchQuery,
+            [Required] Enums.TorrentCategory category,
+            [Required] int limit
+        )
         {
             // Input validation
-            if (searchQuery == null || category == null || limit == 0)
+            if (searchQuery == null || limit == 0)
             {
                 throw new Exception("Search query, category and limit are required!");
             }
 
             // Get scraped torrents from Node.js project
-            string nodePath = @"C:\Program Files\nodejs\node.exe";
-            string scriptPath = @"C:\Projects\140-api\node_scripts\app.js";
+            if (_configuration["NodeScripts:NodePath"] == null || _configuration["NodeScripts:ScriptsPath"] == null)
+            {
+                throw new Exception("Cannot find internal script paths!");
+            }
+            string? nodePath = _configuration["NodeScripts:NodePath"];
+            string? scriptPath = _configuration["NodeScripts:ScriptsPath"];
             string args = string.Format("{0} {1} {2} {3}", "app.js", searchQuery, category, limit);
+            if (nodePath == null || scriptPath == null)
+            {
+                throw new Exception("Cannot find internal script paths!");
+            }
 
             // Start a new process for running Node.js
             ProcessStartInfo startInfo = new ProcessStartInfo(nodePath, scriptPath + " " + args);

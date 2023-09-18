@@ -13,7 +13,7 @@
         
         // Torrent related
         public virtual DbSet<Torrent> Torrent { get; set; }
-        public virtual DbSet<TorrentCategory> TorrentCategory { get; set; }
+        public virtual DbSet<API.Models.Main.TorrentCategory> TorrentCategory { get; set; }
         public virtual DbSet<TorrentTag> TorrentTag { get; set; }
 
         // Torrent-User related
