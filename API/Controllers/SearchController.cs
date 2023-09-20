@@ -1,8 +1,10 @@
-﻿using API.Services.AuthService;
+﻿using API.DTOs.Search;
+using API.Services.AuthService;
 using API.Services.TorrentService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using System.Collections.Generic;
 
 namespace API.Controllers
 {
@@ -21,41 +23,38 @@ namespace API.Controllers
             _torrentService = torrentService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult> Search(
-            [Required] string query
-        )
+        [HttpGet, AllowAnonymous]
+        public async Task<ActionResult> Search([FromQuery] SearchRequestDto searchRequsetDto)
         {
             try
             {
-                //// Convert parameters to enum
-                //Enums.TorrentCategory torrentCategory;
-                //if (!Enum.TryParse(category, true, out torrentCategory))
-                //{
-                //    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Invalid category" });
-                //}
+                // Query is the only necceaary parameter
+                if (searchRequsetDto.Query == null)
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Query is required" });
+                }
 
-                string result = await _torrentService.GetScrapedTorrentsAsync(query, API.Enums.TorrentCategory.All, 10);
-                return Ok(new {result});
+                // Convert category to enum and check existance of it
+                Enums.TorrentCategory torrentCategory;
+                if (!Enum.TryParse(searchRequsetDto.Category, true, out torrentCategory))
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Invalid category" });
+                }
+                // Convert source to enum and check existance of it
+                Enums.TorrentSource torrentSource;
+                if (!Enum.TryParse(searchRequsetDto.Source, true, out torrentSource))
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Invalid source" });
+                }
+
+
+                string result = await _torrentService.GetScrapedTorrentsAsync(searchRequsetDto);
+                return Ok(new { result });
             }
             catch (Exception e)
             {
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
         }
-
-
-        //[HttpGet]
-        //public async ActionResult<string> Search(
-        //    [Required] string query,
-        //    [Required] string category = "All",
-        //    [Required] int limit = 10
-        //)
-        //{
-        //    return Ok("d");
-        //    // Get search results from all avaliable sources
-        //    string scrapedResults = _torrentService.GetScrapedTorrentsAsync(query, Enums.TorrentCategory.All, 10).Result;
-        //    return Ok("");
-        //}
     }
 }

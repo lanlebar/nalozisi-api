@@ -1,11 +1,12 @@
-﻿using API.DTOs.Torrent;
+﻿using API.DTOs.Search;
+using API.DTOs.Torrent;
 
 namespace API.Services.TorrentService
 {
     public interface ITorrentService
     {
         // Get scraped torrents
-        Task<string> GetScrapedTorrentsAsync(string searchQuery, Enums.TorrentCategory category, int limit);
+        Task<string> GetScrapedTorrentsAsync(SearchRequestDto request);
 
         // Create torrent
         // By torrent file upload

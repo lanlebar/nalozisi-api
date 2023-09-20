@@ -72,8 +72,8 @@ namespace API.Controllers
                     return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Invalid category"});
                 }
 
-                string result = await _torrentService.GetScrapedTorrentsAsync(query, torrentCategory, limit);
-                return Ok(result);
+                //string result = await _torrentService.GetScrapedTorrentsAsync(query, torrentCategory, limit);
+                return Ok();
             }
             catch (Exception e)
             {

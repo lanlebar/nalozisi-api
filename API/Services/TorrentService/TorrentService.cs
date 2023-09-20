@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Diagnostics;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Microsoft.Extensions.Configuration;
+using API.DTOs.Search;
 
 namespace API.Services.TorrentService
 {
@@ -25,16 +26,12 @@ namespace API.Services.TorrentService
         }
 
         // Methods
-        public async Task<string> GetScrapedTorrentsAsync(
-            [Required] string searchQuery,
-            [Required] Enums.TorrentCategory category,
-            [Required] int limit
-        )
+        public async Task<string> GetScrapedTorrentsAsync(SearchRequestDto request)
         {
             // Input validation
-            if (searchQuery == null || limit == 0)
+            if (request.Query== null)
             {
-                throw new Exception("Search query, category and limit are required!");
+                throw new Exception("Search query parameter is required!");
             }
 
             // Get scraped torrents from Node.js project
@@ -42,9 +39,10 @@ namespace API.Services.TorrentService
             {
                 throw new Exception("Cannot find internal script paths!");
             }
+            string? constLimit = _configuration["InternalApiSettings:BaseScrapeSearchLimit"];
             string? nodePath = _configuration["NodeScripts:NodePath"];
             string? scriptPath = _configuration["NodeScripts:ScriptsPath"];
-            string args = string.Format("{0} {1} {2} {3}", "app.js", searchQuery, category, limit);
+            string args = $"app.js {request.Query} {request.Category} {request.Source} {constLimit}";
             if (nodePath == null || scriptPath == null)
             {
                 throw new Exception("Cannot find internal script paths!");

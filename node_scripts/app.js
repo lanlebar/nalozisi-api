@@ -1,111 +1,98 @@
 const TorrentSearchApi = require('torrent-search-api');
-const providers = ['ThePirateBay', '1337x', 'Yts'];
+const providers = ['All', 'ThePirateBay', '1337x', 'Yts'];
 const allProviders = TorrentSearchApi.getProviders();
+
+// Enable providers
+TorrentSearchApi.enableProvider('ThePirateBay');
+TorrentSearchApi.enableProvider('1337x');
+TorrentSearchApi.enableProvider('Yts');
 
 // // Define your search parameters
 const searchQuery = process.argv[2] || undefined;
 let category = process.argv[3] || 'All';
-const resultsLimit = parseInt(process.argv[4]) || 10;
+let source = process.argv[4];
+const resultsLimit = parseInt(process.argv[5]);
 
 (async () => {
-  try {
+  // try {
+
     if (!searchQuery || typeof searchQuery !== 'string') return console.log('ERR');
-    if (!category || typeof category !== 'string') return console.log('ERR');
+    if (!category || typeof category !== 'string') return console.log('ERR c');
+    if (!providers.includes(source)) return console.log('ERR s');
     if (!resultsLimit || typeof resultsLimit !== 'number') return console.log('ERR');
 
-    let torrents = [];
+    let globalTorrents = [];
 
-    // Loop through all the available providers
-    for (const provider of providers) {
-      TorrentSearchApi.enableProvider(provider);
 
-      if (provider === 'ThePirateBay') {
+    if (source === 'All') {
+      for (const provider of providers) {
+        console.log(provider)
+        // Skip 'All' provider
+        if (provider === 'All') continue;
+
         // Check if category exists in the given provider
-        allProviders.forEach(provider => {
-          if (provider.name === 'ThePirateBay') {
-            if (!provider.categories.includes(category)) {
-              category = 'All';
-            }
-          }
-        });
-        
-        const foundTorrents = await TorrentSearchApi.search([provider], searchQuery, 'All', resultsLimit);
+        if (!categoryExists(provider, 'All')) {
+          console.log('ERR cat');
+          continue
+        };
 
-        // Format
-        let formattedTorrents = [];
-        foundTorrents.forEach(torrent => {
-          formattedTorrents.push({
-            provider: torrent.provider,
-            title: torrent.title,
-            time: torrent.time,
-            size: torrent.size,
-            magnet: torrent.magnet,
-            seeds: torrent.seeds,
-            peers: torrent.peers,
-            imdb: torrent.imdb !== "" ? torrent.imdb : ""
-          });
-        });
-        torrents.push({ provider: provider, results: formattedTorrents });
+        // Search
+        globalTorrents = await search(provider, searchQuery, category, resultsLimit, globalTorrents);
       }
-      if (provider === '1337x') {
+    } else {
+      console.log("specific provider")
+      if (providerExists(source) && source !== 'All') {
         // Check if category exists in the given provider
-        allProviders.forEach(provider => {
-          if (provider.name === '1337x') {
-            if (!provider.categories.includes(category)) {
-              category = 'All';
-            }
-          }
-        });
+        if (!categoryExists(source, 'All')) return console.log('ERR');
 
-        const foundTorrents = await TorrentSearchApi.search([provider], searchQuery, category, resultsLimit);
-
-        // Format
-        let formattedTorrents = [];
-        foundTorrents.forEach(torrent => {
-          formattedTorrents.push({
-            provider: torrent.provider,
-            title: torrent.title,
-            time: torrent.time,
-            size: torrent.size,
-            pageUrl: torrent.desc,
-            seeds: torrent.seeds,
-            peers: torrent.peers
-          });
-        });
-        torrents.push({ provider: provider, results: formattedTorrents });
+        // Search
+        globalTorrents = await search(source, searchQuery, category, resultsLimit, globalTorrents);
       }
-      if (provider === 'Yts') {
-        // Check if category exists in the given provider
-        allProviders.forEach(provider => {
-          if (provider.name === 'Yts') {
-            if (!provider.categories.includes(category)) {
-              category = 'All';
-            }
-          }
-        });
-
-        const foundTorrents = await TorrentSearchApi.search([provider], searchQuery, category, resultsLimit);
-
-        // Format
-        let formattedTorrents = [];
-        foundTorrents.forEach(torrent => {
-          formattedTorrents.push({
-            provider: torrent.provider,
-            title: torrent.title,
-            time: torrent.time,
-            size: torrent.size,
-            magnet: torrent.link,
-            seeds: torrent.seeds,
-            peers: torrent.peers
-          });
-        });
-        torrents.push({ provider: provider, results: formattedTorrents });
-      }
-
-      TorrentSearchApi.disableProvider(provider);
     }
-    console.log(JSON.stringify(torrents, null, 2));
-  } catch (error) {
-    console.log('ERR');
-  }
+
+    console.log(JSON.stringify(globalTorrents, null, 2));
+
+
+  // } catch (error) {
+  //   console.log('ERR dol');
+  // }
+
 })();
+
+async function search(provider, searchQuery, category, resultsLimit, globalTorrents) {
+  const foundTorrents = await TorrentSearchApi.search([provider], searchQuery, 'All', resultsLimit);
+  console.log("\n\n\nfoundTorrents");
+  // console.log("\n\n\nfoundTorrents");
+  // console.log(foundTorrents);
+  // console.log("\n\n\n");
+  let formattedTorrents = foundTorrents.map(torrent => ({
+    provider: torrent.provider,
+    title: torrent.title,
+    time: torrent.time,
+    size: torrent.size,
+    url: torrent.magnet,
+    seeds: torrent.seeds,
+    peers: torrent.peers,
+    imdb: torrent.imdb !== "" ? torrent.imdb : ""
+  }));
+
+  globalTorrents.push({ provider: provider, results: formattedTorrents });
+  return globalTorrents;
+}
+
+function providerExists(providerName) {
+  return allProviders.some(provider => provider.name === providerName);
+}
+
+function categoryExists(providerName, categoryName) {
+  return true;
+  allProviders.forEach(provider => {
+    if (provider.name === providerName) {
+
+      if (!provider.categories.includes(categoryName)) {
+        return false;
+      }
+    }
+  });
+  return true;
+}
