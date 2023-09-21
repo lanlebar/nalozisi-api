@@ -31,7 +31,6 @@ const providerCateogries = {
 };
 const supportedCategories = ['All', 'Movies', 'Series', 'Cartoons', 'XXX', 'Programs', 'Other'];
 
-
 // Enable supported providers
 TorrentSearchApi.enableProvider('ThePirateBay');
 TorrentSearchApi.enableProvider('1337x');
@@ -44,11 +43,11 @@ var source = process.argv[4];
 const resultsLimit = parseInt(process.argv[5]);
 
 (async () => {
-  // try {
+  try {
 
     if (!searchQuery || typeof searchQuery !== 'string') return console.log('ERR');
-    if (!globalCategory || typeof globalCategory !== 'string') return console.log('ERR c');
-    if (!providers.includes(source)) return console.log('ERR source');
+    if (!globalCategory || typeof globalCategory !== 'string') return console.log('ERR');
+    if (!providers.includes(source)) return console.log('ERR');
     if (!resultsLimit || typeof resultsLimit !== 'number') return console.log('ERR');
 
     let globalTorrents = {};
@@ -77,26 +76,27 @@ const resultsLimit = parseInt(process.argv[5]);
       }
     }
 
-    console.log(JSON.stringify(globalTorrents, null, 2));
+    console.log(JSON.stringify(globalTorrents));
 
 
-  // } catch (error) {
-  //   console.log('ERR dol');
-  // }
+  } catch (error) {
+    console.log('ERR');
+  }
 
 })();
 
 async function search(provider, searchQuery, globalCategory, resultsLimit, globalTorrents) {
   const foundTorrents = await TorrentSearchApi.search([provider], searchQuery, globalCategory, resultsLimit);
+  console.log(foundTorrents);
   let formattedTorrents = foundTorrents.map(torrent => ({
     provider: torrent.provider,
     title: torrent.title,
     time: torrent.time,
     size: torrent.size,
-    url: torrent.magnet,
+    url: getMagnetLink(provider, torrent),
     seeds: torrent.seeds,
     peers: torrent.peers,
-    imdb: torrent.imdb !== "" ? torrent.imdb : ""
+    imdb: getImdb(torrent)
   }));
 
   globalTorrents[provider] = formattedTorrents;
@@ -106,6 +106,19 @@ async function search(provider, searchQuery, globalCategory, resultsLimit, globa
 function providerExists(providerName) {
   const allProviders = TorrentSearchApi.getProviders();
   return allProviders.some(provider => provider.name === providerName);
+}
+
+function getMagnetLink(providerName, torrent) {
+  if (providerName === 'ThePirateBay') return torrent.magnet ||'';
+  else if (providerName === '1337x') return torrent.desc ||'';
+  else if (providerName === 'Yts') return torrent.link ||'';
+  else return '';
+}
+
+function getImdb(torrent) {
+  // TODO - IMDB API call
+  if (torrent.imdb) return torrent.imdb
+  else return '';
 }
 
 function categoryExists(providerName, categoryName) {
