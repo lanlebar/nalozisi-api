@@ -51,7 +51,7 @@ const resultsLimit = parseInt(process.argv[5]);
     if (!providers.includes(source)) return console.log('ERR source');
     if (!resultsLimit || typeof resultsLimit !== 'number') return console.log('ERR');
 
-    let globalTorrents = {};
+    let globalTorrents = [];
 
     if (source === 'All') {
       for (const provider of providers) {
@@ -99,12 +99,12 @@ async function search(provider, searchQuery, globalCategory, resultsLimit, globa
     imdb: torrent.imdb !== "" ? torrent.imdb : ""
   }));
 
-  globalTorrents[provider] = formattedTorrents;
+  globalTorrents.push({ provider: provider, results: formattedTorrents });
   return globalTorrents;
 }
 
-function providerExists(providerName) {
-  const allProviders = TorrentSearchApi.getProviders();
+async function providerExists(providerName) {
+  const allProviders = await TorrentSearchApi.getProviders();
   return allProviders.some(provider => provider.name === providerName);
 }
 

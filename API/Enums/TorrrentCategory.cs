@@ -7,6 +7,7 @@
         Series,
         Cartoons,
         XXX,
-        Programs
+        Programs,
+        Other
     }
 }
