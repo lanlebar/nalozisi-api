@@ -14,6 +14,7 @@
           "Microsoft.EntityFrameworkCore.Tools": "7.0.9",
           "Microsoft.IdentityModel.Tokens": "6.32.1",
           "MonoTorrent": "2.0.7",
+          "Newtonsoft.Json": "13.0.3",
           "Npgsql": "7.0.4",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "7.0.4",
           "Swashbuckle.AspNetCore": "6.5.0",
@@ -268,6 +269,14 @@
           "lib/netstandard2.0/MonoTorrent.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "2.0.7.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.3": {
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.3.27908"
           }
         }
       },
@@ -620,6 +629,13 @@
       "sha512": "sha512-xNzK9pD+U79/wB03ztOBv+7Pr8ra1nWmnLwcSPVQ2BkIL6yiiYiLVIGoECR9GTI5F2yRsQQv55hDbI7GsjYptA==",
       "path": "monotorrent/2.0.7",
       "hashPath": "monotorrent.2.0.7.nupkg.sha512"
+    },
+    "Newtonsoft.Json/13.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ==",
+      "path": "newtonsoft.json/13.0.3",
+      "hashPath": "newtonsoft.json.13.0.3.nupkg.sha512"
     },
     "Npgsql/7.0.4": {
       "type": "package",

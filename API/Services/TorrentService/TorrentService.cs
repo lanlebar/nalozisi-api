@@ -4,9 +4,10 @@ using API.Services.UserService;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Diagnostics;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Microsoft.Extensions.Configuration;
 using API.DTOs.Search;
+using Newtonsoft.Json;
+using API.DTOs.TorrentScrape;
 
 namespace API.Services.TorrentService
 {
@@ -26,7 +27,7 @@ namespace API.Services.TorrentService
         }
 
         // Methods
-        public async Task<string> GetScrapedTorrentsAsync(SearchRequestDto request)
+        public async Task<ScrapedTorrentsResponseDto> GetScrapedTorrentsAsync(SearchRequestDto request)
         {
             // Input validation
             if (request.Query== null)
@@ -39,13 +40,14 @@ namespace API.Services.TorrentService
             {
                 throw new Exception("Cannot find internal script paths!");
             }
+
             string? constLimit = _configuration["InternalApiSettings:BaseScrapeSearchLimit"];
             string? nodePath = _configuration["NodeScripts:NodePath"];
             string? scriptPath = _configuration["NodeScripts:ScriptsPath"];
-            string args = $"app.js {request.Query} {request.Category} {request.Source} {constLimit}";
+            string args = $"app.js \"{request.Query}\" \"{request.Category}\" \"{request.Source}\" \"{constLimit}\"";
             if (nodePath == null || scriptPath == null)
             {
-                throw new Exception("Cannot find internal script paths!");
+                throw new Exception("Cannot find internal script paths");
             }
 
             // Start a new process for running Node.js
@@ -63,7 +65,31 @@ namespace API.Services.TorrentService
                 process.Start();
                 string output = process.StandardOutput.ReadToEnd();
                 await process.WaitForExitAsync();
-                return output;
+
+                // Check if scraping was successful
+                if (output != null && output.ToUpper().Contains("ERR"))
+                {
+                    throw new Exception("Error scraping torrents!");
+                }
+
+                // Deserialize output with any type
+                var jsonResponse = JsonConvert.DeserializeObject<ScrapedTorrentsResponseDto>(output);
+
+                // Check if there are any torrents
+                if (
+                    output == "[]" ||
+                    output == null ||
+                    jsonResponse.ThePirateBay.Count == 0 && jsonResponse._1337x.Count == 0 && jsonResponse.Yts.Count == 0
+                )
+                {
+                    throw new NotFoundExceptionDto("No torrents found!");
+                }
+
+                return jsonResponse;
+            }
+            catch (NotFoundExceptionDto)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -73,7 +99,6 @@ namespace API.Services.TorrentService
             {
                 process.Close();
             }
-
         }
 
         public async Task<Models.Main.Torrent> UploadTorrentAsync(UploadTorrentDto request)

@@ -1,4 +1,5 @@
 ﻿using API.DTOs.Search;
+using API.DTOs.TorrentScrape;
 using API.Services.AuthService;
 using API.Services.TorrentService;
 using Microsoft.AspNetCore.Authorization;
@@ -15,12 +16,14 @@ namespace API.Controllers
         // Fields
         private readonly IAuthService _authService;
         private readonly ITorrentService _torrentService;
+        private readonly IConfiguration _configuration;
 
         // Constructor
-        public SearchController(IAuthService authService, ITorrentService torrentService)
+        public SearchController(IAuthService authService, ITorrentService torrentService, IConfiguration configuration)
         {
             _authService = authService;
             _torrentService = torrentService;
+            _configuration = configuration;
         }
 
         [HttpGet, AllowAnonymous]
@@ -33,6 +36,15 @@ namespace API.Controllers
                 {
                     return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Query is required" });
                 }
+                searchRequsetDto.Source ??= "All";
+                searchRequsetDto.Category ??= "All";
+                if (_configuration["InternalApiSettings:BaseScrapeSearchLimit"] == null)
+                {
+                    // Safer solution
+                    searchRequsetDto.Limit = "20";
+                }
+                searchRequsetDto.Limit ??= _configuration["InternalApiSettings:BaseScrapeSearchLimit"];
+
 
                 // Convert category to enum and check existance of it
                 Enums.TorrentCategory torrentCategory;
@@ -48,8 +60,12 @@ namespace API.Controllers
                 }
 
 
-                string result = await _torrentService.GetScrapedTorrentsAsync(searchRequsetDto);
-                return Ok(new { result });
+                ScrapedTorrentsResponseDto result = await _torrentService.GetScrapedTorrentsAsync(searchRequsetDto);
+                return Ok(result);
+            }
+            catch (NotFoundExceptionDto e)
+            {
+                return StatusCode(404);
             }
             catch (Exception e)
             {

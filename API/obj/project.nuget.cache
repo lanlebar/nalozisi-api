@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "5muKoVQG/48x2KQ+IehcyIuMlrkoFxn9ZlLzmbzp+2E0Pb4Ii9XM767xYCA7cKviRywaLUo2X1VC24uczC3NvQ==",
+  "dgSpecHash": "rasF+CJ8IaajmEQlyu84WiMLpdFY4lChf1B5w1Rfam1ALKvu/metXEDzz5xVIdjb7bVPS8eXZwVFXYcAJLM8Cw==",
   "success": true,
   "projectFilePath": "C:\\Projects\\140-api\\API\\API.csproj",
   "expectedPackageFiles": [
@@ -37,6 +37,7 @@
     "C:\\Users\\lanle\\.nuget\\packages\\mono.nat\\3.0.1\\mono.nat.3.0.1.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\monotorrent\\2.0.7\\monotorrent.2.0.7.nupkg.sha512",
+    "C:\\Users\\lanle\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\npgsql\\7.0.4\\npgsql.7.0.4.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.4\\npgsql.entityframeworkcore.postgresql.7.0.4.nupkg.sha512",
     "C:\\Users\\lanle\\.nuget\\packages\\reusabletasks\\2.0.0\\reusabletasks.2.0.0.nupkg.sha512",

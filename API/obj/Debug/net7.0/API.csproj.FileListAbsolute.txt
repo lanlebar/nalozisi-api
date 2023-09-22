@@ -154,3 +154,4 @@ C:\Projects\140-api\API\obj\Debug\net7.0\ref\API.dll
 C:\Projects\140-api\API\bin\Debug\net7.0\Mono.Nat.dll
 C:\Projects\140-api\API\bin\Debug\net7.0\MonoTorrent.dll
 C:\Projects\140-api\API\bin\Debug\net7.0\ReusableTasks.dll
+C:\Projects\140-api\API\bin\Debug\net7.0\Newtonsoft.Json.dll

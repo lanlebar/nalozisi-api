@@ -37,18 +37,17 @@ TorrentSearchApi.enableProvider('1337x');
 TorrentSearchApi.enableProvider('Yts');
 
 // // Define your search parameters
-const searchQuery = process.argv[2] || '';
-var globalCategory = process.argv[3] || 'All';
-var source = process.argv[4];
-const resultsLimit = parseInt(process.argv[5]);
+const searchQuery = process.argv[3] || '';
+var globalCategory = process.argv[4] || 'All';
+var source = process.argv[5];
+const resultsLimit = process.argv[6];
 
 (async () => {
   try {
-
-    if (!searchQuery || typeof searchQuery !== 'string') return console.log('ERR');
-    if (!globalCategory || typeof globalCategory !== 'string') return console.log('ERR');
-    if (!providers.includes(source)) return console.log('ERR');
-    if (!resultsLimit || typeof resultsLimit !== 'number') return console.log('ERR');
+    if (!searchQuery || typeof searchQuery !== 'string') return console.log('ERR-query');
+    if (!globalCategory || typeof globalCategory !== 'string') return console.log('ERR-category');
+    if (!providers.includes(source)) return console.log('ERR-provider');
+    if (!resultsLimit) return console.log('ERR-limit');
 
     let globalTorrents = {};
 
@@ -59,7 +58,7 @@ const resultsLimit = parseInt(process.argv[5]);
 
         // TODO Check if category exists in the given provider
         if (!categoryExists(provider, 'All')) {
-          console.log('ERR');
+          console.log('ERR-categoryExists');
           continue;
         }
 
@@ -69,7 +68,7 @@ const resultsLimit = parseInt(process.argv[5]);
     } else {
       if (providerExists(source) && source !== 'All') {
         // Check if category exists in the given provider
-        if (!categoryExists(source, 'All')) return console.log('ERR');
+        if (!categoryExists(source, 'All')) return console.log('ERR-categoryExists');
 
         // Search
         globalTorrents = await search(source, searchQuery, globalCategory, resultsLimit, globalTorrents);
@@ -80,14 +79,23 @@ const resultsLimit = parseInt(process.argv[5]);
 
 
   } catch (error) {
-    console.log('ERR');
+    console.log('ERR-unknown');
   }
 
 })();
 
 async function search(provider, searchQuery, globalCategory, resultsLimit, globalTorrents) {
   const foundTorrents = await TorrentSearchApi.search([provider], searchQuery, globalCategory, resultsLimit);
-  console.log(foundTorrents);
+
+  if (provider === 'ThePirateBay') {
+    // Check if any torrents were found
+    const noResultsTorrent = foundTorrents.find(torrent => torrent.title === 'No results returned');
+    if (noResultsTorrent) {
+      globalTorrents[provider] = [];
+      return globalTorrents;
+    }
+  }
+
   let formattedTorrents = foundTorrents.map(torrent => ({
     provider: torrent.provider,
     title: torrent.title,
