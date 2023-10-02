@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using API.Services.TorrentService;
 
 var builder = WebApplication.CreateBuilder(args);
+var _config = builder.Configuration;
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -23,14 +24,23 @@ builder.Services.AddEndpointsApiExplorer();
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => 
+    .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            ValidIssuer = _config["AppSettings:Issuer"],
+            ValidAudiences = new List<string>
+            {
+                "http://localhost:4200/",
+                "http://localhost:4200",
+                "http://localhost:4200/prijava"
+
+            },
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("AppSettings:Key").Value!)),
-            ValidateIssuer = false,
-            ValidateAudience = false
         };
     });
 

@@ -23,6 +23,7 @@ namespace API.Controllers
             _torrentService = torrentService;
         }
 
+        // Routes
         [HttpPost("upload"), Authorize]
         public ActionResult UploadTorrent([FromBody] UploadTorrentDto uploadTorrentDto)
         {

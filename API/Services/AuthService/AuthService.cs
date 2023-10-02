@@ -39,7 +39,8 @@ namespace API.Services.AuthService
                 new Claim("uid", user.UserId.ToString()),
                 new Claim("username", user.Username.ToString()),
                 new Claim("email", user.Email.ToString()),
-                new Claim("role", user.RoleId.ToString())
+                new Claim("role", user.RoleId.ToString()),
+                new Claim("joined", user.JoinedDate.ToString())
             };
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
@@ -49,7 +50,9 @@ namespace API.Services.AuthService
             JwtSecurityToken token = new JwtSecurityToken(
                 claims: claims,
                 expires: DateTime.Now.AddYears(14),
-                signingCredentials: creds
+                signingCredentials: creds,
+                issuer: _configuration.GetSection("AppSettings:Issuer").Value,
+                audience: _configuration.GetSection("AppSettings:Audience").Value
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);

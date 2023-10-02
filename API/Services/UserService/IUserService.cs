@@ -25,10 +25,10 @@ namespace API.Services.UserService
         // Check if user can upload
         Task<Boolean> CanUpload(int userId);
 
-        // Update user - returns bool
+        // Update user - returns new user
         Task<User> UpdateUser(int userId);
 
         // Delete user
-        Task<List<User>> DeleteUser(int userId);
+        Task<Boolean> DeleteUser(int userId);
     }
 }

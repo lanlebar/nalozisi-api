@@ -26,7 +26,7 @@ namespace API.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet, AllowAnonymous]
+        [HttpGet, Authorize]
         public async Task<ActionResult> Search([FromQuery] SearchRequestDto searchRequsetDto)
         {
             try
@@ -47,13 +47,12 @@ namespace API.Controllers
 
 
                 // Convert category to enum and check existance of it
-                Enums.TorrentCategory torrentCategory;
-                if (!Enum.TryParse(searchRequsetDto.Category, true, out torrentCategory))
+                if (!Enum.TryParse(searchRequsetDto.Category, true, out Enums.TorrentCategory torrentCategory))
                 {
                     return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Invalid category" });
                 }
                 // Convert source to enum and check existance of it
-                Enums.TorrentSource torrentSource;
+                TorrentSource torrentSource;
                 if (!Enum.TryParse(searchRequsetDto.Source, true, out torrentSource))
                 {
                     return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Invalid source" });

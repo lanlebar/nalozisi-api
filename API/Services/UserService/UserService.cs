@@ -112,12 +112,19 @@ namespace API.Services.UserService
             throw new NotImplementedException();
         }
 
-        public async Task<List<User>> DeleteUser(int id)
+        public async Task<Boolean> DeleteUser(int userId)
         {
-            var userToDelete = await _context.User.FirstOrDefaultAsync(u => u.UserId == id) ?? throw new ArgumentException("Uporabnik s tem Id ne obstaja!");
-            _context.User.Remove(userToDelete);
-
-            return await _context.User.ToListAsync();
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
+            try
+            {
+                _context.User.Remove(user);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }

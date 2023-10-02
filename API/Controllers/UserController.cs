@@ -3,7 +3,8 @@ using API.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Formats.Asn1;
+using System.Security.Claims;
 namespace API.Controllers
 {
     [Route("api/user")]
@@ -13,35 +14,45 @@ namespace API.Controllers
         // Fields
         private readonly IUserService _userService;
 
+        // Constructor
         public UserController(IUserService userService)
         {
             _userService = userService;
         }
 
         // Routes
-        [HttpGet("userid"), AllowAnonymous]
-        public async Task<ActionResult<string>> Register([FromBody] UserRegisterDto userRegisterDto)
+       [HttpDelete("{userid}"), AllowAnonymous]
+        public async Task<ActionResult<string>> DeleteUser(UserDeleteDto userDeleteDto)
         {
-            return Ok();
+            // Get user id from token
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdFromToken = User.Claims.First(c => c.Type == "sub").Value;
+
+            int n = 10;
+            // Check if the user making the request is the same as the one being deleted
+            if (currentUserId != userDeleteDto.UserId.ToString())
+            {
+                return Unauthorized();
+            }
+
             try
             {
-                return Ok();
-            }
-            catch (ArgumentException e)
-            {
-                // Missing fields
-                return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = e.Message });
-            }
-            catch (ConflictExceptionDto e)
-            {
-                // User not found
-                return Conflict(new ErrorResponseDto { ErrorCode = 1, Message = e.Message });
+                var result = await _userService.DeleteUser(userDeleteDto.UserId);
+                if (result)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Cannot delete user" });
+                }
             }
             catch (Exception e)
             {
-                // Wild card error
+
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
+
         }
     }
 }
