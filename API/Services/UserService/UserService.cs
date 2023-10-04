@@ -1,5 +1,7 @@
-﻿using API.DTOs.User;
+﻿using API.DTOs.Torrent;
+using API.DTOs.User;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.OpenApi.Extensions;
 
 namespace API.Services.UserService
 {
@@ -66,11 +68,54 @@ namespace API.Services.UserService
             }
         }
 
-        public async Task<User> GetUserById(int id)
+        public async Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
+
+
+            List<ProfileTorrentDto> fakeTorrents = new List<ProfileTorrentDto>();
+
+            // Create and add fake torrent objects to the list
+            for (int i = 1; i <= 10; i++)
+            {
+                fakeTorrents.Add(new ProfileTorrentDto
+                {
+                    Title = $"Fake Torrent {i}",
+                    Source = GetRandomEnumValue<TorrentDisplaySource>(),
+                    // You can generate a fake IFormFile for testing purposes
+                    Image = null,
+                    Category = $"Category {i}",
+                    Format = $"Format {i}",
+                    Year = i % 2 == 0 ? null : (2000 + i).ToString(), // Optional year
+                    UploaderUsername = $"Uploader{i}",
+                    Size = i * 100.0f,
+                    Seeders = i * 10,
+                    Leechers = i * 5
+                });
+            }
+
+            return fakeTorrents;
+        }
+        private string GetRandomEnumValue<T>()
+        {
+            // return random enum value
+            return Enum.GetValues(typeof(T))
+                .Cast<T>()
+                .OrderBy(e => Guid.NewGuid())
+                .FirstOrDefault()
+                .ToString();
+        }
+
+        public async Task<User> GetUserById(int userId)
         {
             try
             {
-                var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == id) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
+                var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
                 return user;
             }
             catch (Exception e)

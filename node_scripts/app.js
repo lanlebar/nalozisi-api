@@ -36,17 +36,17 @@ TorrentSearchApi.enableProvider('ThePirateBay');
 TorrentSearchApi.enableProvider('1337x');
 TorrentSearchApi.enableProvider('Yts');
 
-// // Define your search parameters
-const searchQuery = process.argv[3] || '';
-var globalCategory = process.argv[4] || 'All';
-var source = process.argv[5];
-const resultsLimit = process.argv[6];
+// Define your search parameters
+const searchQuery = process.argv[2] || '';
+var globalCategory = process.argv[3] || 'All';
+var source = process.argv[4];
+const resultsLimit = process.argv[5];
 
 (async () => {
   try {
     if (!searchQuery || typeof searchQuery !== 'string') return console.log('ERR-query');
     if (!globalCategory || typeof globalCategory !== 'string') return console.log('ERR-category');
-    if (!providers.includes(source)) return console.log('ERR-provider');
+    if (!providers.includes(source)) return console.log('ERR-providerr');
     if (!resultsLimit) return console.log('ERR-limit');
 
     let globalTorrents = {};

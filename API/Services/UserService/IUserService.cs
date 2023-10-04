@@ -1,4 +1,5 @@
-﻿using API.DTOs.User;
+﻿using API.DTOs.Torrent;
+using API.DTOs.User;
 
 namespace API.Services.UserService
 {
@@ -13,6 +14,13 @@ namespace API.Services.UserService
         Task<Boolean> UserExists(string username);
         Task<Boolean> UserExists(int userId);
 
+        // Torrent based user methods
+        // User uploaded torrents
+        Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId);
+        // User liked torrents
+        Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId);
+
+        // User based methods
         // Get user by id
         Task<User> GetUserById(int userId);
 

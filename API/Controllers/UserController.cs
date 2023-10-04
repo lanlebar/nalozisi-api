@@ -1,4 +1,5 @@
-﻿using API.DTOs.User;
+﻿using API.DTOs.Torrent;
+using API.DTOs.User;
 using API.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -21,7 +22,36 @@ namespace API.Controllers
         }
 
         // Routes
-       [HttpDelete("{userid}"), AllowAnonymous]
+        [HttpGet("likedTorrents"), Authorize]
+        public async Task<ActionResult<List<ProfileTorrentDto>>> GetLikedTorrents(int userId)
+        {
+            try
+            {
+                var torrents = await _userService.GetLikedTorrentsByUserId(userId);
+                return Ok(torrents);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpGet("uploadedTorrents"), Authorize]
+        public async Task<ActionResult<List<ProfileTorrentDto>>> getUploadedTorrents(int userId)
+        {
+            try
+            {
+                var torrents = await _userService.GetUploadedTorrentsByUserId(userId);
+                return Ok(torrents);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+
+        [HttpDelete("{userid}"), Authorize]
         public async Task<ActionResult<string>> DeleteUser(UserDeleteDto userDeleteDto)
         {
             // Get user id from token

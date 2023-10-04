@@ -13,6 +13,7 @@ using API.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using API.Services.TorrentService;
+using API.Services.SearchService;
 
 var builder = WebApplication.CreateBuilder(args);
 var _config = builder.Configuration;
@@ -55,6 +56,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITorrentService, TorrentService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 
 // CORS
 builder.Services.AddCors(options => options.AddPolicy(name: "NgOrigins",

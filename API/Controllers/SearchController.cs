@@ -1,11 +1,8 @@
 ﻿using API.DTOs.Search;
 using API.DTOs.TorrentScrape;
 using API.Services.AuthService;
-using API.Services.TorrentService;
+using API.Services.SearchService;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using System.Collections.Generic;
 
 namespace API.Controllers
 {
@@ -15,18 +12,18 @@ namespace API.Controllers
     {
         // Fields
         private readonly IAuthService _authService;
-        private readonly ITorrentService _torrentService;
+        private readonly ISearchService _searchService;
         private readonly IConfiguration _configuration;
 
         // Constructor
-        public SearchController(IAuthService authService, ITorrentService torrentService, IConfiguration configuration)
+        public SearchController(IAuthService authService, ISearchService searhService, IConfiguration configuration)
         {
             _authService = authService;
-            _torrentService = torrentService;
+            _searchService = searhService;
             _configuration = configuration;
         }
 
-        [HttpGet, Authorize]
+        [HttpGet, AllowAnonymous]
         public async Task<ActionResult> Search([FromQuery] SearchRequestDto searchRequsetDto)
         {
             try
@@ -59,7 +56,7 @@ namespace API.Controllers
                 }
 
 
-                ScrapedTorrentsResponseDto result = await _torrentService.GetScrapedTorrentsAsync(searchRequsetDto);
+                ScrapedTorrentsResponseDto result = await _searchService.GetScrapedTorrentsAsync(searchRequsetDto);
                 return Ok(result);
             }
             catch (NotFoundExceptionDto e)
