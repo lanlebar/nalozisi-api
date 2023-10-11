@@ -2,7 +2,7 @@
 
 namespace API.DTOs.User
 {
-    public class UserDeleteDto
+    public class DeleteUserDto
     {
         public int UserId { get; set; }
     }

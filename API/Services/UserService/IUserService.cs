@@ -14,13 +14,10 @@ namespace API.Services.UserService
         Task<Boolean> UserExists(string username);
         Task<Boolean> UserExists(int userId);
 
-        // Torrent based user methods
-        // User uploaded torrents
-        Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId);
-        // User liked torrents
-        Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId);
-
         // User based methods
+        // Update user
+        Task<User> UpdateUser(UpdateUserDto userUpdateDto);
+
         // Get user by id
         Task<User> GetUserById(int userId);
 
@@ -38,5 +35,12 @@ namespace API.Services.UserService
 
         // Delete user
         Task<Boolean> DeleteUser(int userId);
+
+
+        // Torrent based user methods
+        // User uploaded torrents
+        Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId);
+        // User liked torrents
+        Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId);
     }
 }

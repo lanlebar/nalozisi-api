@@ -1,7 +1,6 @@
 ﻿using API.DTOs.Torrent;
 using API.DTOs.User;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.OpenApi.Extensions;
+using API.Services.FileService;
 
 namespace API.Services.UserService
 {
@@ -9,11 +8,13 @@ namespace API.Services.UserService
     {
         // Fields
         private readonly DataContext _context;
+        private readonly IFileService _fileService;
 
         // Constructor
-        public UserService(DataContext context)
+        public UserService(DataContext context, IFileService fileService)
         {
             _context = context;
+            _fileService = fileService;
         }
 
         // Methods
@@ -68,47 +69,49 @@ namespace API.Services.UserService
             }
         }
 
-        public async Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId)
+        // User based methods
+        public async Task<User> UpdateUser(UpdateUserDto userUpdateDto)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId)
-        {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
-
-
-            List<ProfileTorrentDto> fakeTorrents = new List<ProfileTorrentDto>();
-
-            // Create and add fake torrent objects to the list
-            for (int i = 1; i <= 10; i++)
+            // Check which fields are being updated
+            if (userUpdateDto.Username == null && userUpdateDto.Email == null && userUpdateDto.Password == null && userUpdateDto.ProfilePicFile == null)
             {
-                fakeTorrents.Add(new ProfileTorrentDto
-                {
-                    Title = $"Fake Torrent {i}",
-                    Source = GetRandomEnumValue<TorrentDisplaySource>(),
-                    // You can generate a fake IFormFile for testing purposes
-                    Image = null,
-                    Category = $"Category {i}",
-                    Format = $"Format {i}",
-                    Year = i % 2 == 0 ? null : (2000 + i).ToString(), // Optional year
-                    UploaderUsername = $"Uploader{i}",
-                    Size = i * 100.0f,
-                    Seeders = i * 10,
-                    Leechers = i * 5
-                });
+                throw new Exception("No fields to update");
             }
 
-            return fakeTorrents;
-        }
-        private string GetRandomEnumValue<T>()
-        {
-            // return random enum value
-            return Enum.GetValues(typeof(T))
-                .Cast<T>()
-                .OrderBy(e => Guid.NewGuid())
-                .FirstOrDefault()
-                .ToString();
+            // Check if username is being updated
+            if (userUpdateDto.Username != null)
+            {
+                // Check if username is already taken
+                if (await UserExists(userUpdateDto.Username))
+                {
+                    throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom že obstaja!");
+                }
+
+                // Check if username is valid
+
+            }
+
+            // Check if email is being updated
+            if (userUpdateDto.Email != null)
+            {
+                // Check if email is already taken
+                if (await UserExists(userUpdateDto.Email))
+                {
+                    throw new Exception("E-poštni naslov je že zaseden!");
+                }
+            }
+
+            // Check if password is being updated
+            if (userUpdateDto.Password != null)
+            {
+
+            }
+
+            // Check if profile picture is being updated
+            if (userUpdateDto.ProfilePicFile != null)
+            {
+
+            }
         }
 
         public async Task<User> GetUserById(int userId)
@@ -170,6 +173,51 @@ namespace API.Services.UserService
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        // Torrent based user methods
+        public async Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
+
+
+            List<ProfileTorrentDto> fakeTorrents = new List<ProfileTorrentDto>();
+
+            // Create and add fake torrent objects to the list
+            for (int i = 1; i <= 10; i++)
+            {
+                fakeTorrents.Add(new ProfileTorrentDto
+                {
+                    Title = $"Fake Torrent niofdgoi negoiherghegepogn dofpghpoehgesbbnds opghsepgh ophg {i}",
+                    Source = GetRandomEnumValue<TorrentDisplaySource>(),
+                    // You can generate a fake IFormFile for testing purposes
+                    Image = null,
+                    Category = $"Category {i}",
+                    Format = $"Format {i}",
+                    Year = i % 2 == 0 ? null : (2000 + i).ToString(), // Optional year
+                    UploaderUsername = $"Uploadeehojt iehjetšahj tdophnetšh epsthjt phdpobj dgbsobn shbt horr{i}",
+                    Size = i * 100.0f,
+                    Seeders = i * 10,
+                    Leechers = i * 5
+                });
+            }
+
+            return fakeTorrents;
+        }
+        // TEMP METHOD!!!
+        private string GetRandomEnumValue<T>()
+        {
+            // return random enum value
+            return Enum.GetValues(typeof(T))
+                .Cast<T>()
+                .OrderBy(e => Guid.NewGuid())
+                .FirstOrDefault()
+                .ToString();
         }
     }
 }

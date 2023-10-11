@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Torrent;
 using API.DTOs.User;
+using API.Services.FileService;
 using API.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -50,9 +51,39 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("update"), Authorize]
+        public async Task<ActionResult> UpdateUser ([FromForm] UpdateUserDto updateUserDto)
+        {
+            // Check which fields are being updated
+            if (updateUserDto.Username == null && updateUserDto.Email == null && updateUserDto.Password == null && updateUserDto.ProfilePicFile == null)
+            {
+                return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "No fields to update" });
+            }
+            try
+            {
+                // Check if user exists
+                var userId = User.FindFirst("uid")?.Value;
+                if (userId == null)
+                {
+                    return Unauthorized();
+                }
+                await _userService.UpdateUser(updateUserDto);
+
+                return Ok();
+            }
+            catch (ConflictExceptionDto e)
+            {
+                return Conflict(new ErrorResponseDto { ErrorCode = 1, Message = e.Message });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
 
         [HttpDelete("{userid}"), Authorize]
-        public async Task<ActionResult<string>> DeleteUser(UserDeleteDto userDeleteDto)
+        public async Task<ActionResult<string>> DeleteUser(DeleteUserDto userDeleteDto)
         {
             // Get user id from token
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
