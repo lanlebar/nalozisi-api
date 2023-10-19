@@ -1,6 +1,9 @@
 ﻿using API.DTOs.Torrent;
 using API.DTOs.User;
+using API.Services.AuthService;
 using API.Services.FileService;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace API.Services.UserService
 {
@@ -70,7 +73,7 @@ namespace API.Services.UserService
         }
 
         // User based methods
-        public async Task<User> UpdateUser(UpdateUserDto userUpdateDto)
+        public async Task<User> UpdateUser(UpdateUserDto userUpdateDto, Claim claim)
         {
             // Check which fields are being updated
             if (userUpdateDto.Username == null && userUpdateDto.Email == null && userUpdateDto.Password == null && userUpdateDto.ProfilePicFile == null)
@@ -81,37 +84,73 @@ namespace API.Services.UserService
             // Check if username is being updated
             if (userUpdateDto.Username != null)
             {
+                // Input formatting - nothing can end with a trailing space
+                userUpdateDto.Username = userUpdateDto.Username.Trim().ToLower();
+
                 // Check if username is already taken
                 if (await UserExists(userUpdateDto.Username))
                 {
                     throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom že obstaja!");
                 }
 
-                // Check if username is valid
+                // Update username
+                var user = await GetUserById(int.Parse(claim.Value));
+                user.Username = userUpdateDto.Username;
+                await _context.SaveChangesAsync();
 
+                return user;
             }
 
             // Check if email is being updated
             if (userUpdateDto.Email != null)
             {
+                // Input formatting - nothing can end with a trailing space
+                userUpdateDto.Email = userUpdateDto.Email.Trim().ToLower();
+
                 // Check if email is already taken
-                if (await UserExists(userUpdateDto.Email))
-                {
-                    throw new Exception("E-poštni naslov je že zaseden!");
-                }
+                var user = await GetUserById(int.Parse(claim.Value));
+                // TODO
+                //if (await GetUserByEmail(user.Email))
+                //{
+                //    throw new Exception("E-poštni naslov je že zaseden!");
+                //}
+
+                // Update email
+                user.Email = userUpdateDto.Email;
+                await _context.SaveChangesAsync();
+
+                return user;
             }
 
             // Check if password is being updated
             if (userUpdateDto.Password != null)
             {
+                // Input formatting - nothing can end with a trailing space
+                userUpdateDto.Password = userUpdateDto.Password.Trim();
 
+                // Generate new salt and hash password
+                string salt = BCrypt.Net.BCrypt.GenerateSalt();
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(userUpdateDto.Password, salt);
+
+                // Update password
+                var user = await GetUserById(int.Parse(claim.Value));
+                user.PasswordSalt = salt;
+                user.PasswordHash = hashedPassword;
+                await _context.SaveChangesAsync();
+
+                return user;
             }
 
             // Check if profile picture is being updated
             if (userUpdateDto.ProfilePicFile != null)
             {
+                var user = await GetUserById(int.Parse(claim.Value));
+                await _fileService.SaveFile(userUpdateDto.ProfilePicFile, FileSystemFileType.ProfileImage, user);
 
+                return user;
             }
+
+            throw new Exception("No fields to update");
         }
 
         public async Task<User> GetUserById(int userId)
@@ -153,11 +192,6 @@ namespace API.Services.UserService
             {
                 return false;
             }
-        }
-
-        public Task<User> UpdateUser(int userId)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Boolean> DeleteUser(int userId)
@@ -219,5 +253,6 @@ namespace API.Services.UserService
                 .FirstOrDefault()
                 .ToString();
         }
+
     }
 }

@@ -67,7 +67,8 @@ namespace API.Controllers
                 {
                     return Unauthorized();
                 }
-                await _userService.UpdateUser(updateUserDto);
+                var claim = new Claim("uid", userId);
+                await _userService.UpdateUser(updateUserDto, claim);
 
                 return Ok();
             }

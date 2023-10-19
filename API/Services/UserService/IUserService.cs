@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Torrent;
 using API.DTOs.User;
+using System.Security.Claims;
 
 namespace API.Services.UserService
 {
@@ -16,7 +17,7 @@ namespace API.Services.UserService
 
         // User based methods
         // Update user
-        Task<User> UpdateUser(UpdateUserDto userUpdateDto);
+        Task<User> UpdateUser(UpdateUserDto userUpdateDto, Claim claim);
 
         // Get user by id
         Task<User> GetUserById(int userId);
@@ -29,9 +30,6 @@ namespace API.Services.UserService
 
         // Check if user can upload
         Task<Boolean> CanUpload(int userId);
-
-        // Update user - returns new user
-        Task<User> UpdateUser(int userId);
 
         // Delete user
         Task<Boolean> DeleteUser(int userId);

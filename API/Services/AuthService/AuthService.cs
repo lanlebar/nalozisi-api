@@ -4,8 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Http.HttpResults;
-using API.DTOs.Error;
 
 namespace API.Services.AuthService
 {
@@ -66,7 +64,7 @@ namespace API.Services.AuthService
                 throw new ArgumentException("Uporabniške ime, e-poštni naslov in geslo so obvezni!");
             }
 
-            // Input formatting - nothing cannot end with a trailing space
+            // Input formatting - nothing can end with a trailing space
             request.Email = request.Email.Trim().ToLower();
             request.Username = request.Username.Trim().ToLower();
             request.Password = request.Password.Trim();
@@ -79,8 +77,8 @@ namespace API.Services.AuthService
             }
 
             // Role table: 1 = Admin, 2 = Uploader, 3 = User
-            string salt = BCrypt.Net.BCrypt.GenerateSalt();
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password, salt);
+            string salt = GenerateSalt();
+            string hashedPassword = HashPassword(request.Password, salt);
             var newUser = new User
             {
                 Username = request.Username,
@@ -164,6 +162,17 @@ namespace API.Services.AuthService
         public async Task<bool> IsIpBanned(string ip)
         {
             throw new NotImplementedException();
+        }
+
+        // Helper methods
+        private string GenerateSalt()
+        {
+            return BCrypt.Net.BCrypt.GenerateSalt();
+        }
+
+        private string HashPassword(string password, string salt)
+        {
+            return BCrypt.Net.BCrypt.HashPassword(password, salt);
         }
     }
 }
