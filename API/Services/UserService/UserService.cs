@@ -1,8 +1,5 @@
 ﻿using API.DTOs.Torrent;
-using API.DTOs.User;
-using API.Services.AuthService;
 using API.Services.FileService;
-using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
 namespace API.Services.UserService
@@ -12,12 +9,14 @@ namespace API.Services.UserService
         // Fields
         private readonly DataContext _context;
         private readonly IFileService _fileService;
+        private readonly IConfiguration _configuration;
 
         // Constructor
-        public UserService(DataContext context, IFileService fileService)
+        public UserService(DataContext context, IFileService fileService, IConfiguration configuration)
         {
             _context = context;
             _fileService = fileService;
+            _configuration = configuration;
         }
 
         // Methods
@@ -73,110 +72,242 @@ namespace API.Services.UserService
         }
 
         // User based methods
-        public async Task<User> UpdateUser(UpdateUserDto userUpdateDto, Claim claim)
+        public async Task<Boolean> UpdateUsername(Claim claim,  string username)
         {
-            // Check which fields are being updated
-            if (userUpdateDto.Username == null && userUpdateDto.Email == null && userUpdateDto.Password == null && userUpdateDto.ProfilePicFile == null)
-            {
-                throw new Exception("No fields to update");
+            // Input formatting - nothing can end with a trailing space
+            username = username.Trim().ToLower();
+
+            // Check if username is already taken
+            if (await _context.User.AnyAsync(u => u.Username == username)) {
+                throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom že obstaja!");
             }
 
-            // Check if username is being updated
-            if (userUpdateDto.Username != null)
+            try
             {
-                // Input formatting - nothing can end with a trailing space
-                userUpdateDto.Username = userUpdateDto.Username.Trim().ToLower();
-
-                // Check if username is already taken
-                if (await UserExists(userUpdateDto.Username))
-                {
-                    throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom že obstaja!");
-                }
-
                 // Update username
                 var user = await GetUserById(int.Parse(claim.Value));
-                user.Username = userUpdateDto.Username;
+                user.Username = username;
                 await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
-                return user;
+        public async Task<Boolean> UpdateEmail(Claim claim, string email)
+        {
+            // Input formatting - nothing can end with a trailing space
+            email = email.Trim().ToLower();
+
+            // Check if email is already taken
+            if (await _context.User.AnyAsync(u => u.Email == email))
+            {
+                throw new ConflictExceptionDto("Uporabnik s tem e-poštnim naslovom že obstaja!");
             }
 
-            // Check if email is being updated
-            if (userUpdateDto.Email != null)
+            try
             {
-                // Input formatting - nothing can end with a trailing space
-                userUpdateDto.Email = userUpdateDto.Email.Trim().ToLower();
-
-                // Check if email is already taken
-                var user = await GetUserById(int.Parse(claim.Value));
-                // TODO
-                //if (await GetUserByEmail(user.Email))
-                //{
-                //    throw new Exception("E-poštni naslov je že zaseden!");
-                //}
-
                 // Update email
-                user.Email = userUpdateDto.Email;
+                var user = await GetUserById(int.Parse(claim.Value));
+                user.Email = email;
                 await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
-                return user;
+        public async Task<(Stream, string)> GetPfpStreamWithMime(int userId)
+        {
+            // Get needed data from appsettings.json
+            string? storageFilePath = _configuration["FileSystem:ProfilePics"];
+
+            if (storageFilePath == null)
+            {
+                throw new Exception("Cannot access internal file storage data!");
             }
 
-            // Check if password is being updated
-            if (userUpdateDto.Password != null)
+            // Find the profile picture file name (same as user id)
+            var user = await GetUserById(userId);
+            string pfpFilePath = user.ProfilePicFilePath;
+            if (pfpFilePath == null)
             {
-                // Input formatting - nothing can end with a trailing space
-                userUpdateDto.Password = userUpdateDto.Password.Trim();
+                // User doesn't have a profile picture, return null
+                return (null, null);
+            }
+            string fullPfpFilePath = $"{storageFilePath}/{pfpFilePath}";
 
-                // Generate new salt and hash password
-                string salt = BCrypt.Net.BCrypt.GenerateSalt();
-                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(userUpdateDto.Password, salt);
+            var fileStream = new FileStream(fullPfpFilePath, FileMode.Open, FileAccess.Read);
+            string mimeType = _fileService.GetMimeType(fullPfpFilePath);
+            return (fileStream, mimeType);
+        }
 
-                // Update password
+        public async Task<string> GetPfpBase64(int userId)
+        {
+            // Get needed data from appsettings.json
+            string? storageFilePath = _configuration["FileSystem:ProfilePics"];
+
+            if (storageFilePath == null)
+            {
+                throw new Exception("Cannot access internal file storage data!");
+            }
+
+            // Find the profile picture file name (same as user id)
+            var user = await GetUserById(userId);
+            string pfpFilePath = user.ProfilePicFilePath;
+            if (pfpFilePath == null)
+            {
+                // User doesn't have a profile picture, return null
+                return null;
+            }
+            string fullPfpFilePath = $"{storageFilePath}/{pfpFilePath}";
+
+            return _fileService.ConvertFileToBase64(fullPfpFilePath, FileSystemFileType.ProfileImage);
+        }
+
+        public async Task<Boolean> UpdatePfp(Claim claim, IFormFile profilePicture)
+        {
+            // Get needed data from appsettings.json
+            var supportedFormats = _configuration.GetSection("FileSystem:SupportedImageFormats").Get<string[]>();                
+            string? storageFilePath = _configuration["FileSystem:ProfilePics"];
+            int? maxProfilePicSize = Convert.ToInt32(_configuration["FileSystem:ProfilePicsSizeLimit"]);
+
+            if (supportedFormats == null || storageFilePath == null || maxProfilePicSize == null)
+            {
+                throw new Exception("Cannot access internal file storage data!");
+            }
+
+            // Make sure folder exists
+            Directory.CreateDirectory(storageFilePath);
+
+            // Check if profile picture file type is supported
+            string fileExtension = Path.GetExtension((profilePicture.FileName).ToLowerInvariant());
+            if (!supportedFormats.Any(f => f.Equals(fileExtension, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException($"Tip naložene datoteke ({fileExtension}) ni podprt!");
+            }
+
+            // Check profile picture size limit
+            if (profilePicture.Length > maxProfilePicSize)
+            {
+                throw new ArgumentException("Naložena datoteka je prevelika. Največa velikost datoteke je 5MB!");
+            }
+
+            // Rename image to match user id
+            var user = await GetUserById(int.Parse(claim.Value));
+            int userId = user.UserId;
+            string profilePicFilePath = $"{userId}{fileExtension}";
+            string fullProfilePicFilePath = $"{storageFilePath}/{profilePicFilePath}";
+
+            // Delete current profile picture, if exists
+            var existingFiles = Directory.GetFiles(storageFilePath, $"{userId}.*");
+            foreach (var file in existingFiles)
+            {
+                if (Path.GetFileNameWithoutExtension(file).Equals(Convert.ToString(userId), StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Delete(file);
+                }
+            }
+
+            // Save image to path from appsettings.json
+            using (var stream = new FileStream(fullProfilePicFilePath, FileMode.Create))
+            {
+                await profilePicture.CopyToAsync(stream);
+            }
+
+            // Update database image
+            try
+            {
+                user.ProfilePicFilePath = profilePicFilePath;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+
+        }
+
+        public async Task<Boolean> RemovePfp(Claim claim)
+        {
+            // Get needed data from appsettings.json
+            string? storageFilePath = _configuration["FileSystem:ProfilePics"];
+
+            if (storageFilePath == null)
+            {
+                throw new Exception("Cannot access internal file storage data!");
+            }
+
+            // Delete profile picture - name like userId.*
+            var user = await GetUserById(int.Parse(claim.Value));
+            int userId = user.UserId;
+            // Delete current profile picture, if exists
+            var existingFiles = Directory.GetFiles(storageFilePath, $"{userId}.*");
+            foreach (var file in existingFiles)
+            {
+                if (Path.GetFileNameWithoutExtension(file).Equals(Convert.ToString(userId), StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Delete(file);
+                }
+            }
+
+            // Updata database image
+            try
+            {
+                user.ProfilePicFilePath = null;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<Boolean> UpdatePassword(Claim claim, string password)
+        {
+            // Input validation
+            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Geslo ne sme biti prazno!");
+
+            string salt = BCrypt.Net.BCrypt.GenerateSalt();
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, salt);
+
+            // Update password and password salt
+            try
+            {
                 var user = await GetUserById(int.Parse(claim.Value));
-                user.PasswordSalt = salt;
                 user.PasswordHash = hashedPassword;
+                user.PasswordSalt = salt;
                 await _context.SaveChangesAsync();
-
-                return user;
+                return true;
             }
-
-            // Check if profile picture is being updated
-            if (userUpdateDto.ProfilePicFile != null)
+            catch
             {
-                var user = await GetUserById(int.Parse(claim.Value));
-                await _fileService.SaveFile(userUpdateDto.ProfilePicFile, FileSystemFileType.ProfileImage, user);
-
-                return user;
+                return false;
             }
-
-            throw new Exception("No fields to update");
         }
 
         public async Task<User> GetUserById(int userId)
         {
-            try
-            {
-                var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
-                return user;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            User user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new NotFoundExceptionDto("Uporabnik s tem Id ne obstaja!");
+            return user;
         }
 
         public async Task<User> GetUserByUsername(string username)
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Username == username) ?? throw new Exception("Uporabnik s tem uporabniškim imenom ne obstaja!");
+            User user = await _context.User.FirstOrDefaultAsync(u => u.Username == username) ?? throw new Exception("Uporabnik s tem uporabniškim imenom ne obstaja!");
             return user;
         }
 
         public async Task<User> GetUserByEmail(string email)
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception("Uporabnik s tem e-poštnim naslovom ne obstaja!");
+            User user = await _context.User.FirstOrDefaultAsync(u => u.Email == email) ?? throw new Exception("Uporabnik s tem e-poštnim naslovom ne obstaja!");
             return user;
-
         }
 
         public async Task<Boolean> CanUpload(int userId)
@@ -243,7 +374,8 @@ namespace API.Services.UserService
 
             return fakeTorrents;
         }
-        // TEMP METHOD!!!
+
+        // Temp method
         private string GetRandomEnumValue<T>()
         {
             // return random enum value

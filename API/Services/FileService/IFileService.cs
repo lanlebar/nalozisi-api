@@ -4,13 +4,10 @@ namespace API.Services.FileService
 {
     public interface IFileService
     {
-        // Save file
-        Task SaveFile(IFormFile file, FileSystemFileType fileSystemFileType, User? user = null, Torrent? torrent = null);
+        Task<string> ConvertFileStreamToBase64(Stream fileStream);
 
-        // Get file
-        Task<FileDto> GetFile(string filePath);
+        string ConvertFileToBase64(string filePath, FileSystemFileType fileType);
 
-        // Delete file
-        Task<Boolean> DeleteFile(string filePath);
+        string GetMimeType(string filePath);
     }
 }

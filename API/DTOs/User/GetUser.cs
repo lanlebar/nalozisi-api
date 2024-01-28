@@ -1,0 +1,15 @@
+﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace API.DTOs.User
+{
+    public class GetUser
+    {
+        public required int UserId { get; set; }
+        public required string Username { get; set; }
+        public required string Email { get; set; }
+        public required string Joined { get; set; }
+        public string? ProfilePictureBase64 { get; set; }
+        public string? ProfilePictureMimeType { get; set; }
+    }
+}

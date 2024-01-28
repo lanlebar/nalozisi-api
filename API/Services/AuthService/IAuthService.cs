@@ -16,6 +16,10 @@ namespace API.Services.AuthService
         // Validate user exists, validate user is not banned, validate password, generate token, return token
         Task<string> LoginAsync(UserLoginDto user);
 
+        // Verify login
+        // Used to verify login credentials
+        Task<Boolean> VerifyLogin(string username, string password);
+
         // Get all banned emails
         Task<List<BannedEmail>> GetBannedEmails();
 

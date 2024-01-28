@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Search;
 using API.DTOs.TorrentScrape;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Newtonsoft.Json;
 using System.Diagnostics;
 
@@ -66,14 +67,18 @@ namespace API.Services.SearchService
                 var jsonResponse = JsonConvert.DeserializeObject<ScrapedTorrentsResponseDto>(output);
 
                 // Check if there are any torrents
-                if (
-                    output == "[]" ||
-                    output == null ||
-                    jsonResponse.ThePirateBay.Count == 0 && jsonResponse._1337x.Count == 0 && jsonResponse.Yts.Count == 0
-                )
+                if (jsonResponse != null)
                 {
-                    throw new NotFoundExceptionDto("No torrents found!");
+                    if (output == "[]" || output == null || jsonResponse.ThePirateBay.Count == 0 && jsonResponse._1337x.Count == 0 && jsonResponse.Yts.Count == 0)
+                    {
+                        throw new NotFoundExceptionDto("No torrents found!");
+                    }
                 }
+                else
+                {
+                    throw new Exception("Error scrapig torrents!");
+                }
+
 
                 return jsonResponse;
             }

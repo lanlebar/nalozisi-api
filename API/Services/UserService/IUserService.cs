@@ -16,8 +16,26 @@ namespace API.Services.UserService
         Task<Boolean> UserExists(int userId);
 
         // User based methods
-        // Update user
-        Task<User> UpdateUser(UpdateUserDto userUpdateDto, Claim claim);
+        // Update user username
+        Task<Boolean> UpdateUsername(Claim claim, string username);
+
+        // Update user email
+        Task<Boolean> UpdateEmail(Claim claim, string email);
+
+        // Get user pfp stream with mime
+        Task<(Stream, string)> GetPfpStreamWithMime(int userId);
+
+        // Get user pfp in base 64
+        Task<string> GetPfpBase64(int userId);
+
+        // Update user pfp
+        Task<Boolean> UpdatePfp(Claim claim, IFormFile profilePicture);
+
+        // Remove user pfp
+        Task<Boolean> RemovePfp(Claim claim);
+
+        // Update user password
+        Task<Boolean> UpdatePassword(Claim claim, string newPassword);
 
         // Get user by id
         Task<User> GetUserById(int userId);

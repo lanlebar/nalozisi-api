@@ -47,7 +47,7 @@ namespace API.Services.AuthService
 
             JwtSecurityToken token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddYears(14),
+                expires: DateTime.Now.AddMonths(1),
                 signingCredentials: creds,
                 issuer: _configuration.GetSection("AppSettings:Issuer").Value,
                 audience: _configuration.GetSection("AppSettings:Audience").Value
@@ -142,6 +142,18 @@ namespace API.Services.AuthService
 
             // Generate JWT token
             return await GenerateJwtToken(request);
+        }
+
+        public async Task<Boolean> VerifyLogin(string username, string password)
+        {
+            // Get user by username
+            User user = await _userService.GetUserByUsername(username);
+
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            {
+                return false;
+            }
+            return true;
         }
 
         public async Task<List<BannedEmail>> GetBannedEmails()

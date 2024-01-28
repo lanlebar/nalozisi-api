@@ -19,98 +19,51 @@ namespace API.Services.FileService
         }
 
         // Methods
-        public async Task SaveFile(IFormFile file, FileSystemFileType fileSystemFileType, User? user = null, Torrent? torrent = null)
+        public async Task<string> ConvertFileStreamToBase64(Stream fileStream)
         {
-            List<string> supportedImageFormats = _configuration.GetSection("FileSystem:SupportedImageFormats").Get<List<string>>();
-            if (supportedImageFormats == null)
+            using (var memoryStream = new MemoryStream())
             {
-                throw new Exception("SupportedImageFormats not found in appsettings.json");
+                await fileStream.CopyToAsync(memoryStream);
+                byte[] imageBytes = memoryStream.ToArray();
+                return Convert.ToBase64String(imageBytes);
             }
-
-
-            // Check if file is supported
-            string fileExtension = file.FileName.Split('.').Last();
-            if (!supportedImageFormats.Contains(fileExtension))
-            {
-                throw new Exception("File format is not supported");
-            }
-
-            string basePath = GetBasePath(fileSystemFileType);
-            string fileName;
-            switch (fileSystemFileType)
-            {
-                case FileSystemFileType.ProfileImage:
-                    // Save file to basePath + userId
-                    if (user == null)
-                    {
-                        throw new Exception("User is required for saving a profile picture");
-                    }
-                    fileName = user.UserId.ToString();
-                    break;
-                case FileSystemFileType.TorrentImage:
-                    // Save file to basePath + torrentId
-                    if (torrent == null)
-                    {
-                        throw new Exception("Torrent is required for saving a torrent picture");
-                    }
-                    fileName = torrent.TorrentGuid.ToString();
-                    break;
-                case FileSystemFileType.Wysiwyg:
-                    // Save file to basePath + torrentId
-                    if (torrent == null)
-                    {
-                        throw new Exception("Torrent is required for saving a torrent picture");
-                    }
-                    fileName = torrent.TorrentGuid.ToString();
-                    break;
-                default:
-                    throw new Exception("Invalid fileSystemFileType");
-            }
-
-            // Create directory if it doesn't exist
-            if (!Directory.Exists(basePath))
-            {
-                Directory.CreateDirectory(basePath);
-            }
-
-            // Save file
-            string filePath = $"{Path.Combine(basePath, fileName)}.{fileExtension}";
-            using Stream stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
         }
 
-        public Task<FileDto> GetFile(string filePath)
+        public string ConvertFileToBase64(string filePath, FileSystemFileType fileType)
         {
-            throw new NotImplementedException();
+            byte[] fileBytes = File.ReadAllBytes(GetFullFilePath(filePath, fileType));
+            return Convert.ToBase64String(fileBytes);
         }
 
-        public Task<bool> DeleteFile(string filePath)
+        public string GetFullFilePath(string filePath, FileSystemFileType fileType)
         {
-            throw new NotImplementedException();
-        }
-
-        // Helper methods
-        private string GetBasePath(FileSystemFileType fileSystemFileType)
-        {
-            string? path;
-            switch (fileSystemFileType)
+            // Get needed data from appsettings.json
+            string? profilePicStorage = _configuration["FileSystem:ProfilePics"];
+            if (profilePicStorage == null)
             {
-                case FileSystemFileType.ProfileImage:
-                    path = _configuration["FileSystem:ProfilePics"];
-                    break;
-
-                case FileSystemFileType.TorrentImage:
-                    path = _configuration["FileSystem:TorrentPics"];
-                    break;
-
-                case FileSystemFileType.Wysiwyg:
-                    path = _configuration["FileSystem:WysiwygFiles"];
-                    break;
-
-                default:
-                    throw new Exception("Invalid fileSystemFileType");
+                throw new Exception("Cannot access internal file storage data!");
             }
-            return path ?? throw new Exception("Base path not found in appsettings.json");
+
+            return fileType switch
+            {
+                FileSystemFileType.ProfileImage => $"{profilePicStorage}/{filePath}",
+                _ => profilePicStorage.ToString()
+            };
+        }
+
+        public string GetMimeType(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                ".bmp" => "image/bmp",
+                ".gif" => "image/gif",
+                ".tiff" or ".tif" => "image/tiff",
+                _ => "application/octet-stream", // Default MIME
+            };
         }
     }
 }
