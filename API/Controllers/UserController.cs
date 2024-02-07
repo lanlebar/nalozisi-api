@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace API.Controllers
 {
     [Route("api/user")]
@@ -42,12 +43,11 @@ namespace API.Controllers
                     UserId = user.UserId,
                     Username = user.Username,
                     Email = user.Email,
-                    Joined = Convert.ToString(user.JoinedDate),
-                    ProfilePictureBase64 = string.IsNullOrEmpty(user.ProfilePicFilePath) ? null : _fileService.ConvertFileToBase64(user.ProfilePicFilePath, FileSystemFileType.ProfileImage),
-                    ProfilePictureMimeType = string.IsNullOrEmpty(user.ProfilePicFilePath) ? null: _fileService.GetMimeType(user.ProfilePicFilePath)
+                    Joined = user.JoinedDate.Date.ToShortDateString(),
+                    Role = Convert.ToString(user.Role.RoleName)
                 });
             }
-            catch (NotFoundExceptionDto e)
+            catch (NotFoundException e)
             {
                 return NotFound(e);
             }
@@ -57,7 +57,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("pfp/{userId}"), Authorize]
+        [HttpGet("pfp/{userId}")]
         public async Task<IActionResult> GetUserPfp(int userId)
         {
             try
@@ -194,7 +194,12 @@ namespace API.Controllers
                 if (updatePfpDto.ProfilePicFile == null)
                 {
                     // Remove profile picture
-                    return Ok("remove");
+                    var removePfpMethodInvoke = await _userService.RemovePfp(claim);
+                    if (!removePfpMethodInvoke)
+                    {
+                        return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
+                    }
+                    return Ok();
                 }
                 else
                 {
@@ -228,14 +233,15 @@ namespace API.Controllers
                 // Old password cannot be the same as new password
                 if (updatePasswordDto.NewPassword == updatePasswordDto.OldPassword)
                 {
-                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Novo geslo ne sme biti enako prejšnjemu!" });
+                    return StatusCode(403, new ErrorResponseDto { ErrorCode = 1, Message = "Novo geslo ne sme biti enako prejšnjemu" });
                 }
 
                 // Verify the old password is correct
-                var username = User.FindFirstValue("username") ?? throw new ArgumentNullException("Uporabniško ime je prazno!");
+                var username = User.FindFirstValue("username") ?? throw new ArgumentNullException();
                 if (! await _authService.VerifyLogin(username, updatePasswordDto.OldPassword))
                 {
-                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Staro geslo ni pravilno!"});
+                    return StatusCode(403, new ErrorResponseDto { ErrorCode = 1, Message = "Staro geslo ni pravilno!" });
+
                 }
 
                 var claim = new Claim("uid", userId);
@@ -248,46 +254,50 @@ namespace API.Controllers
             }
             catch (Exception e)
             {
-                if (e is ArgumentException || e is ArgumentNullException)
+
+                if (e is ArgumentNullException)
                 {
-                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = e.Message });
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Uporabniško ime je prazno!" });
                 }
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
         }
 
-        [HttpDelete("{userid}"), Authorize]
-        public async Task<ActionResult<string>> DeleteUser(DeleteUserDto userDeleteDto)
+        [HttpDelete("deleteUser"), Authorize]
+        public async Task<IActionResult> DeleteUser([FromForm] DeleteUserDto deleteUserDto)
         {
-            // Get user id from token
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var userIdFromToken = User.Claims.First(c => c.Type == "sub").Value;
-
-            int n = 10;
-            // Check if the user making the request is the same as the one being deleted
-            if (currentUserId != userDeleteDto.UserId.ToString())
-            {
-                return Unauthorized();
-            }
-
             try
             {
-                var result = await _userService.DeleteUser(userDeleteDto.UserId);
-                if (result)
+                // Check if user exists
+                var userId = User.FindFirstValue("uid");
+                if (userId == null)
                 {
-                    return Ok();
+                    return Unauthorized();
                 }
-                else
+
+                // Verify password
+                var username = User.FindFirstValue("username") ?? throw new ArgumentNullException();
+                if (!await _authService.VerifyLogin(username, deleteUserDto.Password))
                 {
-                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Cannot delete user" });
+                    return StatusCode(403, new ErrorResponseDto { ErrorCode = 1, Message = "Geslo ni pravilno" });
                 }
+
+                var claim = new Claim("uid", userId);
+                var deleteUserMethodInvoke = await _userService.DeleteUser(Convert.ToInt32(userId));
+                if (!deleteUserMethodInvoke)
+                {
+                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
+                }
+                return Ok();
             }
             catch (Exception e)
             {
-
+                if (e is ArgumentNullException)
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Uporabniško ime je prazno!" });
+                }
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
-
         }
     }
 }

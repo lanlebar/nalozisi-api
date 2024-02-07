@@ -56,6 +56,39 @@ namespace API.Services.AuthService
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        public async Task<string> GenerateJwtToken(int userId)
+        {
+            if (!await _userService.UserExists(userId))
+            {
+                throw new ArgumentException("Uporabnik s tem uporabniškim imenom ne obstaja!");
+            }
+
+            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new ArgumentException("Uporabnik s tem uporabniškim imenom ne obstaja!");
+
+            List<Claim> claims = new List<Claim>
+            {
+                new Claim("uid", user.UserId.ToString()),
+                new Claim("username", user.Username.ToString()),
+                new Claim("email", user.Email.ToString()),
+                new Claim("role", user.RoleId.ToString()),
+                new Claim("joined", user.JoinedDate.ToString())
+            };
+
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                _configuration.GetSection("AppSettings:Key").Value!));
+            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            JwtSecurityToken token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.Now.AddMonths(1),
+                signingCredentials: creds,
+                issuer: _configuration.GetSection("AppSettings:Issuer").Value,
+                audience: _configuration.GetSection("AppSettings:Audience").Value
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         public async Task<string> RegisterAsync(UserRegisterDto request)
         {
             // Input validation

@@ -21,7 +21,8 @@ public class User
     // 1-many
     public virtual List<Notification> Notifications { get; set; } = new();
     public virtual List<Torrent> UploadedTorrents { get; set; } = new();
-    public virtual Role Role { get; set; } = null!;
+    [ForeignKey("RoleId")]
+    public virtual Role Role { get; set; }
 
     // many-many
     public virtual List<Like> LikedTorrents { get; set; } = new();

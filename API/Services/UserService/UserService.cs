@@ -294,7 +294,9 @@ namespace API.Services.UserService
 
         public async Task<User> GetUserById(int userId)
         {
-            User user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new NotFoundExceptionDto("Uporabnik s tem Id ne obstaja!");
+            User user = await _context.User
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new NotFoundException();
             return user;
         }
 

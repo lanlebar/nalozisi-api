@@ -1,8 +1,8 @@
 ﻿namespace API.DTOs.Error
 {
-    public class NotFoundExceptionDto : Exception
+    public class NotFoundException : Exception
     {
-        public NotFoundExceptionDto(string message) : base(message)
+        public NotFoundException()
         {
         }
     }

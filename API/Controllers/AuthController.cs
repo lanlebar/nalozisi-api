@@ -2,6 +2,7 @@
 using API.DTOs.User;
 using API.Services.AuthService;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace API.Controllers.Auth
 {
@@ -63,12 +64,27 @@ namespace API.Controllers.Auth
             }
         }
 
-        [HttpGet("verify"), Authorize]
-        public ActionResult Verify()
+        [HttpPost("refresh"), Authorize]
+        public async Task<ActionResult<string>> RefreshToken()
         {
-            // If we get here, the token is valid
-            return Ok();
+            try
+            {
+                var userId = User.FindFirstValue("uid");
+                if (userId == null)
+                {
+                    return Unauthorized("loolll");
+                }
+                // Generate token
+                var token = await _authService.GenerateJwtToken(Convert.ToInt32(userId));
+                return Ok(new JwtTokenResponseDto { Token = token });
+            }
+            catch
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
+            }
         }
+
+
 
     }
 }

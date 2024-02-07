@@ -1,17 +1,22 @@
-﻿using API.DTOs.TorrentScrape;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace API.DTOs.TorrentScrape
 {
     public class ScrapedTorrentsResponseDto
     {
-        [JsonProperty("ThePirateBay")]
-        public List<ScrapredTorrentDto>? ThePirateBay { get; set; }
+        [JsonProperty("thepiratebay")]
+        public List<ScrapredTorrentDto> ThePirateBay { get; set; } = new List<ScrapredTorrentDto>();
         
-        [JsonProperty("1337x")]
-        public List<ScrapredTorrentDto>? _1337x { get; set; }
-        
-        [JsonProperty("Yts")]
-        public List<ScrapredTorrentDto>? Yts { get; set; }
+        [JsonProperty("yts")]
+        public List<ScrapredTorrentDto> Yts { get; set; } = new List<ScrapredTorrentDto>();
+
+        [JsonProperty("torrent9")]
+        public List<ScrapredTorrentDto> Torrent9 { get; set; } = new List<ScrapredTorrentDto>();
+
+        [JsonProperty("torrentproject")]
+        public List<ScrapredTorrentDto> TorrentProject { get; set; } = new List<ScrapredTorrentDto>();
+
+        [JsonProperty("eztv")]
+        public List<ScrapredTorrentDto> Eztv { get; set; } = new List<ScrapredTorrentDto>();
     }
 }

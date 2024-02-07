@@ -4,6 +4,6 @@ namespace API.DTOs.User
 {
     public class DeleteUserDto
     {
-        public int UserId { get; set; }
+        public required string Password { get; set; }
     }
 }

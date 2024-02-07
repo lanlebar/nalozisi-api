@@ -9,7 +9,6 @@ namespace API.DTOs.User
         public required string Username { get; set; }
         public required string Email { get; set; }
         public required string Joined { get; set; }
-        public string? ProfilePictureBase64 { get; set; }
-        public string? ProfilePictureMimeType { get; set; }
+        public required string Role { get; set; }
     }
 }

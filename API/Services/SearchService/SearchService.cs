@@ -1,8 +1,10 @@
 ﻿using API.DTOs.Search;
 using API.DTOs.TorrentScrape;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace API.Services.SearchService
 {
@@ -18,7 +20,7 @@ namespace API.Services.SearchService
         }
 
         // Methods
-        public async Task<ScrapedTorrentsResponseDto> GetScrapedTorrentsAsync(SearchRequestDto request)
+        public async Task<dynamic> GetScrapedTorrentsAsync(SearchRequestDto request)
         {
             // Input validation
             if (request.Query == null)
@@ -35,7 +37,7 @@ namespace API.Services.SearchService
             string? constLimit = _configuration["InternalApiSettings:BaseScrapeSearchLimit"];
             string? nodePath = _configuration["NodeScripts:NodePath"];
             string? scriptPath = _configuration["NodeScripts:ScriptsPath"];
-            string args = $"\"{request.Query}\" \"{request.Category}\" \"{request.Source}\" \"{constLimit}\"";
+            string args = $"\"{request.Query}\" \"{request.Category}\" \"{request.Source}\" {constLimit}";
             if (nodePath == null || scriptPath == null)
             {
                 throw new Exception("Cannot find internal script paths");
@@ -58,31 +60,43 @@ namespace API.Services.SearchService
                 await process.WaitForExitAsync();
 
                 // Check if scraping was successful
-                if (output != null && output.ToUpper().Contains("ERR"))
+                if (output != null && output.StartsWith("ERR-"))
                 {
                     throw new Exception("Error scraping torrents!");
                 }
-
-                // Deserialize output with any type
-                var jsonResponse = JsonConvert.DeserializeObject<ScrapedTorrentsResponseDto>(output);
-
-                // Check if there are any torrents
-                if (jsonResponse != null)
+                
+                // First checking for empty results
+                if (output == null || output == "[]" || output == "")
                 {
-                    if (output == "[]" || output == null || jsonResponse.ThePirateBay.Count == 0 && jsonResponse._1337x.Count == 0 && jsonResponse.Yts.Count == 0)
+                    throw new NotFoundException();
+                }
+
+                // Deserialize output
+                ScrapedTorrentsResponseDto jsonResponse = JsonConvert.DeserializeObject<ScrapedTorrentsResponseDto>(output) 
+                    ?? throw new Exception("Internal exception");
+
+                // Second checking for empty results
+                try
+                {
+                    Boolean allEmpty = jsonResponse.ThePirateBay.Count == 0 &&
+                    jsonResponse.Yts.Count == 0 &&
+                    jsonResponse.Torrent9.Count == 0 &&
+                    jsonResponse.TorrentProject.Count == 0 &&
+                    jsonResponse.Eztv.Count == 0;
+                    if (allEmpty)
                     {
-                        throw new NotFoundExceptionDto("No torrents found!");
+                        throw new NotFoundException();
                     }
                 }
-                else
+                catch
                 {
-                    throw new Exception("Error scrapig torrents!");
+                    throw new NotFoundException();
                 }
 
 
-                return jsonResponse;
+                return jsonResponse ?? throw new Exception("Error scraping torrents");
             }
-            catch (NotFoundExceptionDto)
+            catch (NotFoundException)
             {
                 throw;
             }
@@ -94,6 +108,45 @@ namespace API.Services.SearchService
             {
                 process.Close();
             }
+        }
+    
+        public IDictionary<string, List<string>> GetAllProviderCategories()
+        {
+            // Data completely depends on the command bellow, executed in the app.js
+            // console.log(TorrentSearchApi.getProviders());
+
+            IDictionary<string, List<string>> categorySource = new Dictionary<string, List<string>>
+            {
+                { "All", new List<string> { "All" } },
+                { "ThePirateBay", new List<string> { "All", "Audio", "Video", "Applications", "Games", "Porn", "Other", "Top100" } },
+                { "Yts", new List<string> { "All", "Movies" } },
+                { "Torrent9", new List<string> { "All", "Movies", "TV", "Music", "Apps", "Books", "Top100" } },
+                { "TorrentProject", new List<string> { "All" } },
+                { "Eztv", new List<string> { "All" } }
+            };
+            return categorySource;
+        }
+
+        public List<string> GetProviderCategories(string provider)
+        {
+            // Don't modify method! Only modify the GetAllProviderCategories()
+
+            IDictionary<string, List<string>> allProviderCategories = this.GetAllProviderCategories();
+            if (allProviderCategories.ContainsKey(provider))
+            {
+                return allProviderCategories[provider];
+            } else
+            {
+                throw new ArgumentException($"Provider {provider} not found!");
+            }
+        }
+
+        public List<string> GetAllSupportedProviders()
+        {
+            // Don't modify method! Only modify the GetAllProviderCategories()
+
+            IDictionary<string, List<string>> allProviderCategories = this.GetAllProviderCategories();
+            return allProviderCategories.Keys.ToList();
         }
     }
 }

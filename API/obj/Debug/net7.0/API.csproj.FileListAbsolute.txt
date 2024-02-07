@@ -156,3 +156,4 @@ C:\Projects\140-api\API\bin\Debug\net7.0\MonoTorrent.dll
 C:\Projects\140-api\API\bin\Debug\net7.0\ReusableTasks.dll
 C:\Projects\140-api\API\bin\Debug\net7.0\Newtonsoft.Json.dll
 C:\Projects\140-api\API\obj\Debug\net7.0\API.sourcelink.json
+C:\Projects\140-api\API\bin\Debug\net7.0\torrents.json

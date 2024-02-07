@@ -7,6 +7,7 @@ namespace API.Services.AuthService
     {
         // Generate JWT
         Task<string> GenerateJwtToken(UserLoginDto user);
+        Task<string> GenerateJwtToken(int userId);
 
         // Register user
         // Validate user doesn't exist yet, validate email is not banned, generate salt, hash password, create user, return user
