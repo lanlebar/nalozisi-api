@@ -68,7 +68,6 @@ const resultsLimit = process.argv[5];
         console.log(finalResultJson);
 
     } catch (error) {
-        console.log(error, '\n');
         console.log('ERR-unknown');
     }
 
@@ -91,7 +90,7 @@ async function search(query, category, source, limit, globalTorrents) {
     let formattedTorrents = foundTorrents.map(torrent => ({
         source: torrent.provider.toLowerCase(),
         title: torrent.title,
-        time: torrent.time,
+        time: torrent.time || '?',
         size: torrent.size,
         url: getMagnetLink(source, torrent),
         seeds: getSeeds(torrent),

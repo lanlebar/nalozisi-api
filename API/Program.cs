@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using API.Services.TorrentService;
 using API.Services.SearchService;
 using API.Services.FileService;
+using API.Services.RecommendService;
 
 var builder = WebApplication.CreateBuilder(args);
 var _config = builder.Configuration;
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITorrentService, TorrentService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IRecommnedService, RecommendService>();
 
 // CORS
 builder.Services.AddCors(options => options.AddPolicy(name: "NgOrigins",

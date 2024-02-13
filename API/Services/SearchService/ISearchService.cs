@@ -1,6 +1,4 @@
 ﻿using API.DTOs.Search;
-using API.DTOs.TorrentScrape;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace API.Services.SearchService
 {

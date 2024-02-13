@@ -1,10 +1,7 @@
 ﻿using API.DTOs.Search;
 using API.DTOs.TorrentScrape;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace API.Services.SearchService
 {
