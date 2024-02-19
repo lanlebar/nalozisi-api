@@ -5,12 +5,6 @@ namespace API.Services.RecommendService
 {
     public interface IRecommnedService
     {
-        // Discover movies
-        Task<List<TmdbMovieResponse>> DiscoverMovie(DiscoverMovieRequestDto request);
-
-        // Discover TV shows
-        Task<List<TmdbMovieResponse>> DiscoverTv(DiscoverTvRequestDto request);
-
         // Get now playing movies
         Task<List<TmdbMovieResponse>> NowPlaying(string language, int page, string region);
 

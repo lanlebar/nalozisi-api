@@ -23,6 +23,11 @@ namespace API.Controllers
         {
             try
             {
+                if (language != "sl-SI" && language != "en-US")
+                {
+                    return BadRequest();
+                }
+
                 var result = await _recommnedService.NowPlaying(language, page, region);
                 return Ok(result);
             }
@@ -37,6 +42,11 @@ namespace API.Controllers
         {
             try
             {
+                if (language != "sl-SI" && language != "en-US")
+                {
+                    return BadRequest();
+                }
+
                 var result = await _recommnedService.Popular(language, page, region);
                 return Ok(result);
             }
@@ -51,6 +61,11 @@ namespace API.Controllers
         {
             try
             {
+                if (language != "sl-SI" && language != "en-US")
+                {
+                    return BadRequest();
+                }
+
                 var result = await _recommnedService.TopRated(language, page, region);
                 return Ok(result);
             }
@@ -65,6 +80,11 @@ namespace API.Controllers
         {
             try
             {
+                if (language != "sl-SI" && language != "en-US")
+                {
+                    return BadRequest();
+                }
+
                 var result = await _recommnedService.Upcoming(language, page, region);
                 return Ok(result);
             }
@@ -84,6 +104,12 @@ namespace API.Controllers
                 {
                     return BadRequest();
                 }
+
+                if (language != "sl-SI" && language != "en-US")
+                {
+                    return BadRequest();
+                }
+
                 var result = await _recommnedService.TrendingMovie(timeWindow, language);
                 return Ok(result);
             }
@@ -100,6 +126,11 @@ namespace API.Controllers
             {
                 timeWindow = timeWindow.ToLower();
                 if (timeWindow != "day" && timeWindow != "week")
+                {
+                    return BadRequest();
+                }
+
+                if (language != "sl-SI" && language != "en-US")
                 {
                     return BadRequest();
                 }

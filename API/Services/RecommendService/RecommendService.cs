@@ -16,17 +16,7 @@ namespace API.Services.RecommendService
             _configuration = configuration;
         }
 
-        public Task<List<TmdbMovieResponse>> DiscoverMovie(DiscoverMovieRequestDto request)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<TmdbMovieResponse>> DiscoverTv(DiscoverTvRequestDto request)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<TmdbMovieResponse>> NowPlaying(string language, int page, string region)
+        public async Task<List<TmdbMovieResponse>> NowPlaying(string language, int page, string region) 
         {
             // Get TMDB API key from configugration
             string? tmdbKey = _configuration["ApiKeys:Tmdb"] ?? throw new Exception("Cannot find internal API keys");
@@ -48,7 +38,7 @@ namespace API.Services.RecommendService
                 Description = movie.Overview,
                 ReleaseDate = movie.Release_Date,
                 ImageUrl = movie.Poster_Path,
-                Genres = movie.Genre_Ids.Select(id => GetGenreName(id)).ToList()
+                Genres = movie.Genre_Ids.Select(id => GetGenreName(id, language)).ToList()
             }).ToList();
 
             return recommendResponseDtoList;
@@ -76,7 +66,7 @@ namespace API.Services.RecommendService
                 Description = movie.Overview,
                 ReleaseDate = movie.Release_Date,
                 ImageUrl = movie.Poster_Path,
-                Genres = movie.Genre_Ids.Select(id => GetGenreName(id)).ToList()
+                Genres = movie.Genre_Ids.Select(id => GetGenreName(id, language)).ToList()
             }).ToList();
 
             return recommendResponseDtoList;
@@ -104,7 +94,7 @@ namespace API.Services.RecommendService
                 Description = movie.Overview,
                 ReleaseDate = movie.Release_Date,
                 ImageUrl = movie.Poster_Path,
-                Genres = movie.Genre_Ids.Select(id => GetGenreName(id)).ToList()
+                Genres = movie.Genre_Ids.Select(id => GetGenreName(id, language)).ToList()
             }).ToList();
 
             return recommendResponseDtoList;
@@ -132,7 +122,7 @@ namespace API.Services.RecommendService
                 Description = movie.Overview,
                 ReleaseDate = movie.Release_Date,
                 ImageUrl = movie.Poster_Path,
-                Genres = movie.Genre_Ids.Select(id => GetGenreName(id)).ToList()
+                Genres = movie.Genre_Ids.Select(id => GetGenreName(id, language)).ToList()
             }).ToList();
 
             return recommendResponseDtoList;
@@ -159,7 +149,7 @@ namespace API.Services.RecommendService
                 Title = movie.Title,
                 Description = movie.Overview,
                 ImageUrl = movie.Poster_Path,
-                Genres = movie.Genre_Ids.Select(id => GetGenreName(id)).ToList()
+                Genres = movie.Genre_Ids.Select(id => GetGenreName(id, language)).ToList()
             }).ToList();
 
             return recommendResponseDtoList;
@@ -186,17 +176,17 @@ namespace API.Services.RecommendService
                 Title = movie.Name,
                 Description = movie.Overview,
                 ImageUrl = movie.Poster_Path,
-                Genres = movie.Genre_Ids.Select(id => GetGenreName(id)).ToList()
+                Genres = movie.Genre_Ids.Select(id => GetGenreName(id, language)).ToList()
             }).ToList();
 
             return recommendResponseDtoList;
         }
 
         // Helper methods
-        private static string GetGenreName(int genreId)
+        private static string GetGenreName(int genreId, string language)
         {
             // Updated data to include both movie and TV genres
-            IDictionary<int, string> genreDict = new Dictionary<int, string>
+            IDictionary<int, string> genreDictEng = new Dictionary<int, string>
             {
                 { 28, "Action" },
                 { 12, "Adventure" },
@@ -227,11 +217,56 @@ namespace API.Services.RecommendService
                 { 10768, "War & Politics" }
             };
 
-            if (genreDict.TryGetValue(genreId, out string genreName))
+            IDictionary<int, string> genreDictSlo = new Dictionary<int, string>
             {
-                return genreName;
+                { 28, "Akcija" },
+                { 12, "Pustolovščina" },
+                { 16, "Animacija" },
+                { 35, "Komedija" },
+                { 80, "Kriminalka" },
+                { 99, "Dokumentarni" },
+                { 18, "Drama" },
+                { 10751, "Družinski" },
+                { 14, "Fantazija" },
+                { 36, "Zgodovinski" },
+                { 27, "Grozljivka" },
+                { 10402, "Glasbeni" },
+                { 9648, "Misterij" },
+                { 10749, "Romantični" },
+                { 878, "Znanstvena fantastika" },
+                { 10770, "TV film" },
+                { 53, "Triler" },
+                { 10752, "Vojni" },
+                { 37, "Vestern" },
+                { 10759, "Akcija & Pustolovščina" },
+                { 10762, "Otroški" },
+                { 10763, "Novice" },
+                { 10764, "Resničnostni" },
+                { 10765, "Znanstvena fantastika & Fantazija" },
+                { 10766, "Telenovela" },
+                { 10767, "Pogovorna oddaja" },
+                { 10768, "Vojna & Politika" }
+            };
+            if (language == "en-US")
+            {
+                if (genreDictEng.TryGetValue(genreId, out string genreName))
+                {
+                    return genreName;
+                }
+                return "Unknown category";
+            } 
+            else if (language == "sl-SI")
+            {
+                if (genreDictSlo.TryGetValue(genreId, out string genreName))
+                {
+                    return genreName;
+                }
+                return "Neznana kategorija";
+            } 
+            else
+            {
+                throw new Exception("Neveljaven izbor jezika");
             }
-            return "Unknown category";
         }
 
     }
