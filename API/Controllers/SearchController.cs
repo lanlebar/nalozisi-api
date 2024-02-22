@@ -1,6 +1,4 @@
 ﻿using API.DTOs.Search;
-using API.DTOs.TorrentScrape;
-using API.Services.AuthService;
 using API.Services.SearchService;
 using Microsoft.AspNetCore.Authorization;
 
@@ -48,30 +46,6 @@ namespace API.Controllers
                 {
                     return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Neveljaven vnos kategorije!" });
                 }
-
-                //return Ok();
-
-                //// Convert category to enum and check existence of it
-                //Enums.TorrentCategory torrentCategory;
-                //if (!Enum.TryParse(searchRequsetDto.Category, true, out torrentCategory))
-                //{
-                //    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Neveljaven vnos kategorije!" });
-                //}
-
-                //// Convert source to enum and check existence of it
-                //TorrentSource torrentSource;
-                //if (!Enum.TryParse(searchRequsetDto.Source, true, out torrentSource))
-                //{
-                //    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Neveljaven vnos vira!" });
-                //}
-
-                //// Prepare new internalSearchRequestDto
-                //InternalSearchRequestDto internalSearchRequestDto = new InternalSearchRequestDto
-                //{
-                //    Query = searchRequsetDto.Query,
-                //    Category = torrentCategory,
-                //    Source = torrentSource
-                //};
                 
                 var result = await _searchService.GetScrapedTorrentsAsync(searchRequsetDto);
                 return Ok(result);

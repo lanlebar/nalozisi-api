@@ -5,14 +5,12 @@ global using API.DTOs.Auth;
 global using API.Enums;
 global using API.DTOs.Error;
 global using Microsoft.AspNetCore.Mvc;
-global using System.ComponentModel.DataAnnotations;
 
 using API.Services.AuthService;
 using System.Text;
 using API.Services.UserService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using API.Services.TorrentService;
 using API.Services.SearchService;
 using API.Services.FileService;
 using API.Services.RecommendService;
@@ -57,7 +55,6 @@ builder.Services.AddDbContext<DataContext>(options =>
 // Program services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ITorrentService, TorrentService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IRecommnedService, RecommendService>();

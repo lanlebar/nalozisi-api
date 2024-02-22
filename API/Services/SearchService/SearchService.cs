@@ -75,11 +75,9 @@ namespace API.Services.SearchService
                 // Second checking for empty results
                 try
                 {
-                    Boolean allEmpty = jsonResponse.ThePirateBay.Count == 0 &&
+                    bool allEmpty = jsonResponse.ThePirateBay.Count == 0 &&
                     jsonResponse.Yts.Count == 0 &&
-                    jsonResponse.Torrent9.Count == 0 &&
-                    jsonResponse.TorrentProject.Count == 0 &&
-                    jsonResponse.Eztv.Count == 0;
+                    jsonResponse.TorrentProject.Count == 0;
                     if (allEmpty)
                     {
                         throw new NotFoundException();
@@ -90,16 +88,7 @@ namespace API.Services.SearchService
                     throw new NotFoundException();
                 }
 
-
                 return jsonResponse ?? throw new Exception("Error scraping torrents");
-            }
-            catch (NotFoundException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
             }
             finally
             {
@@ -117,9 +106,7 @@ namespace API.Services.SearchService
                 { "All", new List<string> { "All" } },
                 { "ThePirateBay", new List<string> { "All", "Audio", "Video", "Applications", "Games", "Porn", "Other", "Top100" } },
                 { "Yts", new List<string> { "All", "Movies" } },
-                { "Torrent9", new List<string> { "All", "Movies", "TV", "Music", "Apps", "Books", "Top100" } },
-                { "TorrentProject", new List<string> { "All" } },
-                { "Eztv", new List<string> { "All" } }
+                { "TorrentProject", new List<string> { "All" } }
             };
             return categorySource;
         }

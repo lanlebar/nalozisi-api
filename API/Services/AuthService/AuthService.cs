@@ -109,9 +109,11 @@ namespace API.Services.AuthService
                 throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom ali e-poštnim naslovom že obstaja!");
             }
 
-            // Role table: 1 = Admin, 2 = Uploader, 3 = User
             string salt = GenerateSalt();
             string hashedPassword = HashPassword(request.Password, salt);
+
+            // Role table: 1 = Admin, 2 = Uporabnik
+            Role role = _context.Role.FirstOrDefault(r => r.RoleId == 2) ?? throw new ArgumentException("Role not found");
             var newUser = new User
             {
                 Username = request.Username,
@@ -120,25 +122,13 @@ namespace API.Services.AuthService
                 PasswordSalt = salt,
                 ProfilePicFilePath = null,
                 JoinedDate = DateTime.UtcNow,
-                RoleId = 3
+                RoleId = 2,
+                Role = role
             };
 
             // Add new user instance to the database
             _context.User.Add(newUser);
             await _context.SaveChangesAsync();
-
-            // Create and add new Ratio entry instance
-            var newRatio = new Ratio
-            {
-                UserId = newUser.UserId,
-                SeedingBytes = 0,
-                LeechingBytes = 0
-            };
-            _context.Ratio.Add(newRatio);
-            await _context.SaveChangesAsync();
-
-            // Assign new ratio instance to the new user instance
-            newUser.Ratio = newRatio;
 
             // Save changes to the database
             await _context.SaveChangesAsync();
@@ -187,26 +177,6 @@ namespace API.Services.AuthService
                 return false;
             }
             return true;
-        }
-
-        public async Task<List<BannedEmail>> GetBannedEmails()
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<bool> IsEmailBanned(string email)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<BannedIp>> GetBannedIps()
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<bool> IsIpBanned(string ip)
-        {
-            throw new NotImplementedException();
         }
 
         // Helper methods

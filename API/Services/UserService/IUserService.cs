@@ -1,6 +1,4 @@
-﻿using API.DTOs.Torrent;
-using API.DTOs.User;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace API.Services.UserService
 {
@@ -17,10 +15,10 @@ namespace API.Services.UserService
 
         // User based methods
         // Update user username
-        Task<Boolean> UpdateUsername(Claim claim, string username);
+        Task UpdateUsername(Claim claim, string username);
 
         // Update user email
-        Task<Boolean> UpdateEmail(Claim claim, string email);
+        Task UpdateEmail(Claim claim, string email);
 
         // Get user pfp stream with mime
         Task<(Stream, string)> GetPfpStreamWithMime(int userId);
@@ -29,13 +27,16 @@ namespace API.Services.UserService
         Task<string> GetPfpBase64(int userId);
 
         // Update user pfp
-        Task<Boolean> UpdatePfp(Claim claim, IFormFile profilePicture);
+        Task UpdatePfp(Claim claim, IFormFile profilePicture);
 
         // Remove user pfp
-        Task<Boolean> RemovePfp(Claim claim);
+        Task RemovePfp(Claim claim);
 
         // Update user password
-        Task<Boolean> UpdatePassword(Claim claim, string newPassword);
+        Task UpdatePassword(Claim claim, string newPassword);
+
+        // Update user role
+        Task UpdateRole(Claim claim, int roleId);
 
         // Get user by id
         Task<User> GetUserById(int userId);
@@ -46,17 +47,10 @@ namespace API.Services.UserService
         // Get user by email
         Task<User> GetUserByEmail(string email);
 
-        // Check if user can upload
-        Task<Boolean> CanUpload(int userId);
+        // Check if user is admin
+        Task<Boolean> IsAdmin(int userId);
 
         // Delete user
-        Task<Boolean> DeleteUser(int userId);
-
-
-        // Torrent based user methods
-        // User uploaded torrents
-        Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId);
-        // User liked torrents
-        Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId);
+        Task DeleteUser(int userId);
     }
 }

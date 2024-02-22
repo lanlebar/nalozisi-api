@@ -10,13 +10,7 @@ namespace API.DTOs.TorrentScrape
         [JsonProperty("yts")]
         public List<ScrapredTorrentDto> Yts { get; set; } = new List<ScrapredTorrentDto>();
 
-        [JsonProperty("torrent9")]
-        public List<ScrapredTorrentDto> Torrent9 { get; set; } = new List<ScrapredTorrentDto>();
-
         [JsonProperty("torrentproject")]
         public List<ScrapredTorrentDto> TorrentProject { get; set; } = new List<ScrapredTorrentDto>();
-
-        [JsonProperty("eztv")]
-        public List<ScrapredTorrentDto> Eztv { get; set; } = new List<ScrapredTorrentDto>();
     }
 }

@@ -20,17 +20,5 @@ namespace API.Services.AuthService
         // Verify login
         // Used to verify login credentials
         Task<Boolean> VerifyLogin(string username, string password);
-
-        // Get all banned emails
-        Task<List<BannedEmail>> GetBannedEmails();
-
-        // Verify if email is banned
-        Task<bool> IsEmailBanned(string email);
-
-        // Get all banned ips
-        Task<List<BannedIp>> GetBannedIps();
-
-        // Verify if ip is banned
-        Task<bool> IsIpBanned(string ip);
     }
 }

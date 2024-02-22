@@ -1,5 +1,4 @@
-﻿using API.DTOs.Error;
-using API.DTOs.User;
+﻿using API.DTOs.User;
 using API.Services.AuthService;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;

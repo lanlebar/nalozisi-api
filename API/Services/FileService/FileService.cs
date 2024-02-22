@@ -1,11 +1,4 @@
-﻿using API.DTOs.FileSystem;
-using API.Enums;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IO;
-using System.Reflection.Metadata;
-
-namespace API.Services.FileService
+﻿namespace API.Services.FileService
 {
     public class FileService : IFileService
     {
@@ -19,15 +12,6 @@ namespace API.Services.FileService
         }
 
         // Methods
-        public async Task<string> ConvertFileStreamToBase64(Stream fileStream)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                await fileStream.CopyToAsync(memoryStream);
-                byte[] imageBytes = memoryStream.ToArray();
-                return Convert.ToBase64String(imageBytes);
-            }
-        }
 
         public string ConvertFileToBase64(string filePath, FileSystemFileType fileType)
         {

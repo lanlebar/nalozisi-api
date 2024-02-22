@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace API.DTOs.User
+﻿namespace API.DTOs.User
 {
     public class GetUser
     {

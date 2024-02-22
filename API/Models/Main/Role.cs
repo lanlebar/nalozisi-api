@@ -2,11 +2,8 @@
 
 public class Role
 {
-    [Key]
     public required int RoleId { get; set; }
-    public required string RoleName { get; set; }
-
-    // Navigation properties
+    public required string Name { get; set; }
 
     // 1-many
     public virtual List<User> Users { get; set; } = new();

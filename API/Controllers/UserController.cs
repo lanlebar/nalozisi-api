@@ -1,17 +1,9 @@
-﻿using API.DTOs.Torrent;
-using API.DTOs.User;
+﻿using API.DTOs.User;
 using API.Services.FileService;
 using API.Services.UserService;
 using API.Services.AuthService;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using System.Formats.Asn1;
 using System.Security.Claims;
-using System.Net.WebSockets;
-using System.Reflection.Metadata.Ecma335;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace API.Controllers
 {
     [Route("api/user")]
@@ -32,7 +24,7 @@ namespace API.Controllers
         }
 
         // Routes
-        [HttpGet("{userId}"), Authorize]
+        [HttpGet("userId"), AllowAnonymous]
         public async Task<ActionResult> GetUser(int userId)
         {
             try
@@ -44,12 +36,37 @@ namespace API.Controllers
                     Username = user.Username,
                     Email = user.Email,
                     Joined = user.JoinedDate.Date.ToShortDateString(),
-                    Role = Convert.ToString(user.Role.RoleName)
+                    Role = Convert.ToString(user.Role.Name)
                 });
             }
-            catch (NotFoundException e)
+            catch (NotFoundException)
             {
-                return NotFound(e);
+                return NotFound();
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpGet("username"), AllowAnonymous]
+        public async Task<ActionResult> GetUser(string username)
+        {
+            try
+            {
+                User user = await _userService.GetUserByUsername(username);
+                return Ok(new GetUser
+                {
+                    UserId = user.UserId,
+                    Username = user.Username,
+                    Email = user.Email,
+                    Joined = user.JoinedDate.Date.ToShortDateString(),
+                    Role = Convert.ToString(user.Role.Name)
+                });
+            }
+            catch (NotFoundException)
+            {
+                return NotFound();
             }
             catch (Exception e)
             {
@@ -68,34 +85,6 @@ namespace API.Controllers
                     return NotFound();
                 }
                 return File(stream, mimeType);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
-            }
-        }
-
-        [HttpGet("likedTorrents"), Authorize]
-        public async Task<ActionResult<List<ProfileTorrentDto>>> GetLikedTorrents(int userId)
-        {
-            try
-            {
-                var torrents = await _userService.GetLikedTorrentsByUserId(userId);
-                return Ok(torrents);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
-            }
-        }
-
-        [HttpGet("uploadedTorrents"), Authorize]
-        public async Task<ActionResult<List<ProfileTorrentDto>>> getUploadedTorrents(int userId)
-        {
-            try
-            {
-                var torrents = await _userService.GetUploadedTorrentsByUserId(userId);
-                return Ok(torrents);
             }
             catch (Exception e)
             {
@@ -123,11 +112,7 @@ namespace API.Controllers
                 }
                 
                 var claim = new Claim("uid", userId);
-                var updateUsernameMethodInvoke = await _userService.UpdateUsername(claim, updateUsernameDto.Username);
-                if (!updateUsernameMethodInvoke)
-                {
-                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
-                }
+                await _userService.UpdateUsername(claim, updateUsernameDto.Username);
                 return Ok();
             }
             catch (ConflictExceptionDto e)
@@ -160,11 +145,7 @@ namespace API.Controllers
                 }
 
                 var claim = new Claim("uid", userId);
-                var updateEmailMethodInvoke = await _userService.UpdateEmail(claim, updateEmailDto.Email);
-                if (!updateEmailMethodInvoke)
-                {
-                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
-                }
+                await _userService.UpdateEmail(claim, updateEmailDto.Email);
                 return Ok();
             }
             catch (ConflictExceptionDto e)
@@ -194,21 +175,13 @@ namespace API.Controllers
                 if (updatePfpDto.ProfilePicFile == null)
                 {
                     // Remove profile picture
-                    var removePfpMethodInvoke = await _userService.RemovePfp(claim);
-                    if (!removePfpMethodInvoke)
-                    {
-                        return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
-                    }
+                    await _userService.RemovePfp(claim);
                     return Ok();
                 }
                 else
                 {
                     // Update profile picture
-                    var updatePfpMethodInvoke = await _userService.UpdatePfp(claim, updatePfpDto.ProfilePicFile);
-                    if (!updatePfpMethodInvoke)
-                    {
-                        return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
-                    }
+                    await _userService.UpdatePfp(claim, updatePfpDto.ProfilePicFile);
                     return Ok();
                 }
             }
@@ -245,11 +218,7 @@ namespace API.Controllers
                 }
 
                 var claim = new Claim("uid", userId);
-                var updatePasswordMethodInvoke = await _userService.UpdatePassword(claim, updatePasswordDto.NewPassword);
-                if (!updatePasswordMethodInvoke)
-                {
-                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
-                }
+                await _userService.UpdatePassword(claim, updatePasswordDto.NewPassword);
                 return Ok();
             }
             catch (Exception e)
@@ -264,7 +233,7 @@ namespace API.Controllers
         }
 
         [HttpDelete("deleteUser"), Authorize]
-        public async Task<IActionResult> DeleteUser([FromForm] DeleteUserDto deleteUserDto)
+        public async Task<ActionResult> DeleteUser([FromForm] DeleteUserDto deleteUserDto)
         {
             try
             {
@@ -283,11 +252,7 @@ namespace API.Controllers
                 }
 
                 var claim = new Claim("uid", userId);
-                var deleteUserMethodInvoke = await _userService.DeleteUser(Convert.ToInt32(userId));
-                if (!deleteUserMethodInvoke)
-                {
-                    return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = "Server error" });
-                }
+                await _userService.DeleteUser(Convert.ToInt32(userId));
                 return Ok();
             }
             catch (Exception e)
@@ -296,6 +261,67 @@ namespace API.Controllers
                 {
                     return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Uporabniško ime je prazno!" });
                 }
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpDelete("adminDelete"), Authorize]
+        public async Task<ActionResult> AdminDelete(string username)
+        {
+            // Check if user is admin
+            var uid = User.FindFirstValue("uid");
+            if (uid == null) return Unauthorized();
+
+            if (!await _userService.IsAdmin(Convert.ToInt32(uid)))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                User userToDelete = await _userService.GetUserByUsername(username);
+                if (userToDelete != null)
+                {
+                    await _userService.DeleteUser(Convert.ToInt32(userToDelete.UserId));
+                    return Ok();
+                }
+                return NotFound();
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpPost("updateRole"), Authorize]
+        public async Task<ActionResult> UpdateRole([FromForm] UpdateRoleDto updateRoleDto)
+        {
+            // Check if user is admin
+            var uid = User.FindFirstValue("uid");
+            if (uid == null) return Unauthorized();
+
+            if (!await _userService.IsAdmin(Convert.ToInt32(uid)))
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                updateRoleDto.RoleName = updateRoleDto.RoleName.ToLower();
+                if (updateRoleDto.RoleName != "admin" &&  updateRoleDto.RoleName != "uporabnik")
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message= "RoleName mora vsebovati vrednost admin ali uporabnik" });
+                }
+                // Role table: 1 = Admin, 2 = Uporabnik
+                
+                int roleId = updateRoleDto.RoleName == "admin" ? 1 : 2;
+
+                Claim claim = new Claim("uid", Convert.ToString(updateRoleDto.UserId));
+                await _userService.UpdateRole(claim, roleId);
+                return Ok();
+            }
+            catch (Exception e)
+            {
                 return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
             }
         }

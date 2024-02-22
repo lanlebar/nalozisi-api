@@ -5,6 +5,18 @@ namespace API.Services.RecommendService
 {
     public interface IRecommnedService
     {
+        // Set recommendation
+        Task<Recommendation> SetRecommendation(Recommendation recommendation);
+
+        // Get recommendation
+        Task<Recommendation> GetRecommendation(DateOnly date, string type);
+
+        // Delete recommendation
+        Task DeleteRecommendation(DateOnly date, string type);
+
+        // Random title recommendation
+        Task<Recommendation> RandomRecommendation();
+
         // Get now playing movies
         Task<List<TmdbMovieResponse>> NowPlaying(string language, int page, string region);
 

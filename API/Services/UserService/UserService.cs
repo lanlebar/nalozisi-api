@@ -1,5 +1,4 @@
-﻿using API.DTOs.Torrent;
-using API.Services.FileService;
+﻿using API.Services.FileService;
 using System.Security.Claims;
 
 namespace API.Services.UserService
@@ -72,7 +71,7 @@ namespace API.Services.UserService
         }
 
         // User based methods
-        public async Task<Boolean> UpdateUsername(Claim claim,  string username)
+        public async Task UpdateUsername(Claim claim,  string username)
         {
             // Input formatting - nothing can end with a trailing space
             username = username.Trim().ToLower();
@@ -82,21 +81,12 @@ namespace API.Services.UserService
                 throw new ConflictExceptionDto("Uporabnik s tem uporabniškim imenom že obstaja!");
             }
 
-            try
-            {
-                // Update username
-                var user = await GetUserById(int.Parse(claim.Value));
-                user.Username = username;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var user = await GetUserById(int.Parse(claim.Value));
+            user.Username = username;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<Boolean> UpdateEmail(Claim claim, string email)
+        public async Task UpdateEmail(Claim claim, string email)
         {
             // Input formatting - nothing can end with a trailing space
             email = email.Trim().ToLower();
@@ -107,18 +97,10 @@ namespace API.Services.UserService
                 throw new ConflictExceptionDto("Uporabnik s tem e-poštnim naslovom že obstaja!");
             }
 
-            try
-            {
-                // Update email
-                var user = await GetUserById(int.Parse(claim.Value));
-                user.Email = email;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // Update email
+            var user = await GetUserById(int.Parse(claim.Value));
+            user.Email = email;
+            await _context.SaveChangesAsync();
         }
 
         public async Task<(Stream, string)> GetPfpStreamWithMime(int userId)
@@ -169,7 +151,7 @@ namespace API.Services.UserService
             return _fileService.ConvertFileToBase64(fullPfpFilePath, FileSystemFileType.ProfileImage);
         }
 
-        public async Task<Boolean> UpdatePfp(Claim claim, IFormFile profilePicture)
+        public async Task UpdatePfp(Claim claim, IFormFile profilePicture)
         {
             // Get needed data from appsettings.json
             var supportedFormats = _configuration.GetSection("FileSystem:SupportedImageFormats").Get<string[]>();                
@@ -220,20 +202,11 @@ namespace API.Services.UserService
             }
 
             // Update database image
-            try
-            {
-                user.ProfilePicFilePath = profilePicFilePath;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-
+            user.ProfilePicFilePath = profilePicFilePath;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<Boolean> RemovePfp(Claim claim)
+        public async Task RemovePfp(Claim claim)
         {
             // Get needed data from appsettings.json
             string? storageFilePath = _configuration["FileSystem:ProfilePics"];
@@ -257,19 +230,11 @@ namespace API.Services.UserService
             }
 
             // Updata database image
-            try
-            {
-                user.ProfilePicFilePath = null;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            user.ProfilePicFilePath = null;
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<Boolean> UpdatePassword(Claim claim, string password)
+        public async Task UpdatePassword(Claim claim, string password)
         {
             // Input validation
             if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Geslo ne sme biti prazno!");
@@ -278,18 +243,20 @@ namespace API.Services.UserService
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, salt);
 
             // Update password and password salt
-            try
-            {
-                var user = await GetUserById(int.Parse(claim.Value));
-                user.PasswordHash = hashedPassword;
-                user.PasswordSalt = salt;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var user = await GetUserById(int.Parse(claim.Value));
+            user.PasswordHash = hashedPassword;
+            user.PasswordSalt = salt;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateRole(Claim claim, int roleId)
+        {
+            // Role table: 1 = Admin, 2 = Uporabnik
+            Role role = _context.Role.FirstOrDefault(r => r.RoleId == roleId) ?? throw new ArgumentException("Role not found");
+            var user = await GetUserById(int.Parse(claim.Value));
+            user.Role = role;
+            user.RoleId = role.RoleId;
+            await _context.SaveChangesAsync();
         }
 
         public async Task<User> GetUserById(int userId)
@@ -302,7 +269,9 @@ namespace API.Services.UserService
 
         public async Task<User> GetUserByUsername(string username)
         {
-            User user = await _context.User.FirstOrDefaultAsync(u => u.Username == username) ?? throw new Exception("Uporabnik s tem uporabniškim imenom ne obstaja!");
+            User user = await _context.User
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Username == username) ?? throw new NotFoundException();
             return user;
         }
 
@@ -312,81 +281,24 @@ namespace API.Services.UserService
             return user;
         }
 
-        public async Task<Boolean> CanUpload(int userId)
+        public async Task<Boolean> IsAdmin(int userId)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
             // Load role relation
             _context.Entry(user).Reference(u => u.Role).Load();
-            if (user.Role.RoleName == "Nalagalec" || user.Role.RoleName == "Admin")
+            if (user.Role.Name == "Admin")
             {
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
+            
         }
 
-        public async Task<Boolean> DeleteUser(int userId)
+        public async Task DeleteUser(int userId)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
-            try
-            {
-                _context.User.Remove(user);
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+            _context.User.Remove(user);
+            await _context.SaveChangesAsync();
         }
-
-        // Torrent based user methods
-        public async Task<List<ProfileTorrentDto>> GetUploadedTorrentsByUserId(int userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<ProfileTorrentDto>> GetLikedTorrentsByUserId(int userId)
-        {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new Exception("Uporabnik s tem Id ne obstaja!");
-
-
-            List<ProfileTorrentDto> fakeTorrents = new List<ProfileTorrentDto>();
-
-            // Create and add fake torrent objects to the list
-            for (int i = 1; i <= 10; i++)
-            {
-                fakeTorrents.Add(new ProfileTorrentDto
-                {
-                    Title = $"Fake Torrent niofdgoi negoiherghegepogn dofpghpoehgesbbnds opghsepgh ophg {i}",
-                    Source = GetRandomEnumValue<TorrentDisplaySource>(),
-                    // You can generate a fake IFormFile for testing purposes
-                    Image = null,
-                    Category = $"Category {i}",
-                    Format = $"Format {i}",
-                    Year = i % 2 == 0 ? null : (2000 + i).ToString(), // Optional year
-                    UploaderUsername = $"Uploadeehojt iehjetšahj tdophnetšh epsthjt phdpobj dgbsobn shbt horr{i}",
-                    Size = i * 100.0f,
-                    Seeders = i * 10,
-                    Leechers = i * 5
-                });
-            }
-
-            return fakeTorrents;
-        }
-
-        // Temp method
-        private string GetRandomEnumValue<T>()
-        {
-            // return random enum value
-            return Enum.GetValues(typeof(T))
-                .Cast<T>()
-                .OrderBy(e => Guid.NewGuid())
-                .FirstOrDefault()
-                .ToString();
-        }
-
     }
 }

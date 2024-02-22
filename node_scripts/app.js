@@ -12,7 +12,7 @@
     console.log(TorrentSearchApi.getProviders());
 */
 const TorrentSearchApi = require('torrent-search-api');
-const providers = ['All', 'ThePirateBay', 'Yts', 'Torrent9', 'TorrentProject', 'Eztv'];
+const providers = ['All', 'ThePirateBay', 'Yts', 'TorrentProject'];
 
 
 
@@ -107,9 +107,7 @@ function getMagnetLink(providerName, torrent) {
     providerName = providerName.toLowerCase();
     if (providerName == 'thepiratebay') return torrent.magnet || '';
     else if (providerName == 'yts') return torrent.link || '';
-    else if (providerName == 'torrent9') return torrent.desc || '';
     else if (providerName == 'torrentproject') return torrent.desc || '';
-    else if (providerName == 'eztv') return torrent.desc || '';
     else return '?';
 }
 
@@ -122,8 +120,6 @@ function getSeeds(torrent) {
 }
 
 function getPeers(torrent) {
-    // Eztv doesn't return peers
-    if (torrent.provider.toLowerCase() == 'eztv') return '?';
     try {
         return torrent.peers == 'N/A' ? '?' : torrent.peers.toString();
     } catch (error) {

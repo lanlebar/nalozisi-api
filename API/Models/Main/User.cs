@@ -13,19 +13,8 @@ public class User
     public required DateTime JoinedDate { get; set; }
     public required int RoleId { get; set; }
 
-    // Navigation properties
-    
-    // 1-1
-    public virtual Ratio Ratio { get; set; } = null!;
-    
     // 1-many
-    public virtual List<Notification> Notifications { get; set; } = new();
-    public virtual List<Torrent> UploadedTorrents { get; set; } = new();
     [ForeignKey("RoleId")]
-    public virtual Role Role { get; set; }
-
-    // many-many
-    public virtual List<Like> LikedTorrents { get; set; } = new();
-    public virtual List<Peer> Peers { get; set; } = new();
+    public required virtual Role Role { get; set; } 
 
 }

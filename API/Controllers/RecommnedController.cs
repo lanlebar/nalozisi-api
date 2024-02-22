@@ -1,6 +1,8 @@
 ﻿using API.DTOs.Recommend;
 using API.Services.RecommendService;
+using API.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
@@ -8,14 +10,103 @@ namespace API.Controllers
     [ApiController]
     public class RecommnedController : ControllerBase
     {
-
         // Fields
         private readonly IRecommnedService _recommnedService;
+        private readonly IUserService _userService;
 
         // Constructor
-        public RecommnedController(IRecommnedService recommnedService)
+        public RecommnedController(IRecommnedService recommnedService, IUserService userService)
         {
             _recommnedService = recommnedService;
+            _userService = userService;
+        }
+
+        // Routes
+        [HttpPost, AllowAnonymous]
+        public async Task<ActionResult<Recommendation>> SetRecommendation([FromForm] Recommendation recommendation)
+        {
+            // Check if user is admin
+            var userId = User.FindFirstValue("uid");
+            if (userId == null) return Unauthorized();
+            
+            if (!await _userService.IsAdmin(Convert.ToInt32(userId))) {
+                return Unauthorized();
+            }
+
+            try
+            {
+                recommendation.Type = recommendation.Type.ToLower();
+                if (recommendation.Type != "movie" && recommendation.Type != "series")
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Tip mora imeti vrednost movie ali series" });
+                }
+                Recommendation result = await _recommnedService.SetRecommendation(recommendation);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpGet, AllowAnonymous]
+        public async Task<ActionResult<Recommendation>> GetRecommendation(DateOnly date, string type)
+        {
+            try
+            {
+                type = type.ToLower();
+                if (type != "movie" && type != "series")
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Tip mora imeti vrednost movie ali series" });
+                }
+                Recommendation result = await _recommnedService.GetRecommendation(date, type);
+                return Ok(result);
+            }
+            catch (ArgumentException)
+            {
+                return NotFound();
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpDelete, AllowAnonymous]
+        public async Task<ActionResult<Recommendation>> DeleteRecommendation(DateOnly date, string type)
+        {
+            try
+            {
+                type = type.ToLower();
+                if (type != "movie" && type != "series")
+                {
+                    return BadRequest(new ErrorResponseDto { ErrorCode = 1, Message = "Tip mora imeti vrednost movie ali series" });
+                }
+                await _recommnedService.DeleteRecommendation(date, type);
+                return Ok();
+            }
+            catch (ArgumentException)
+            {
+                return NotFound();
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
+        }
+
+        [HttpGet("random"), Authorize]
+        public async Task<ActionResult<Recommendation>> RandomRecommendation()
+        {
+            try
+            {
+                Recommendation result = await _recommnedService.RandomRecommendation();
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new ErrorResponseDto { ErrorCode = 2, Message = e.Message });
+            }
         }
 
         [HttpGet("nowPlaying"), Authorize]
