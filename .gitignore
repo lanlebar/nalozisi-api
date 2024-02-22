@@ -31,6 +31,9 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
+# Node
+node_scripts/node_modules
+
 # Windows Installer files
 *.cab
 *.msi
