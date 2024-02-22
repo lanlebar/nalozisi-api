@@ -32,7 +32,6 @@ Desktop.ini
 $RECYCLE.BIN/
 
 # Node
-**/node_modules
 node_modules
 
 # Windows Installer files
