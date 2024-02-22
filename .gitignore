@@ -32,7 +32,7 @@ Desktop.ini
 $RECYCLE.BIN/
 
 # Node
-/node_scripts/node_modules
+node_modules
 
 # Windows Installer files
 *.cab
