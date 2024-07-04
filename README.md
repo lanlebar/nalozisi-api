@@ -13,7 +13,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Frontend: [nalozisi-angular](https://github.com/lanlebar/nalozisi-api)
+Frontend: [nalozisi-angular](https://github.com/lanlebar/nalozisi-angular)
 
 Torrent search platform build with Angular on the frontend and ASP.NET on the backend. PostgreSQL database.
 Features:
