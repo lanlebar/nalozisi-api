@@ -5,12 +5,8 @@
     <img src="images/logo.png" alt="Logo" height="80">
   </a>
   <h3 align="center" style="margin-top:0;">nalozi.si ASP.NET API</h3>
-
 </div>
 
-
-
-<!-- ABOUT THE PROJECT -->
 ## About The Project
 
 Frontend: [nalozisi-angular](https://github.com/lanlebar/nalozisi-angular)
@@ -39,7 +35,6 @@ API routes:
 ![API routes 2](images/routes2.png)
 ![API routes 3](images/routes3.png)
 
-
 ## License
 
 Distributed under the MIT License. See [`LICENSE.txt`](LICENSE.txt) for more information.
@@ -51,4 +46,3 @@ Lan Lebar - [LinkedIn](https://www.linkedin.com/in/lan-lebar) - lanlebar6@gmail.
 Project Link: [https://github.com/lanlebar/nalozisi-api](https://github.com/lanlebar/nalozisi-api)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
