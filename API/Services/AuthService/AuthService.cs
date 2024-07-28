@@ -48,7 +48,7 @@ namespace API.Services.AuthService
 
             JwtSecurityToken token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddMonths(1),
+                expires: DateTime.Now.AddYears(10),
                 signingCredentials: creds,
                 issuer: _configuration.GetSection("AppSettings:Issuer").Value,
                 audience: _configuration.GetSection("AppSettings:Audience").Value
@@ -82,7 +82,7 @@ namespace API.Services.AuthService
 
             JwtSecurityToken token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddMonths(1),
+                expires: DateTime.Now.AddYears(10),
                 signingCredentials: creds,
                 issuer: _configuration.GetSection("AppSettings:Issuer").Value,
                 audience: _configuration.GetSection("AppSettings:Audience").Value
